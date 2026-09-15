@@ -1,0 +1,127 @@
+import fs from "node:fs/promises";
+import path from "node:path";
+import { randomUUID } from "node:crypto";
+import { NextRequest } from "next/server";
+import { z } from "zod";
+import { formats, type Asset, type Format, type Sport } from "@/domain/project";
+import { createProject, templates } from "@/features/templates/registry";
+import { addProject, assetPath, atomicWrite, dataRoot, initialize, listAssets, listJobs, listProjects, location, readJob, readProject, saveProject, StudioError, validateProject } from "@/server/storage";
+import { compositionHtml } from "@/server/composition-html";
+import { cancelJob, enqueue, retryJob } from "@/server/jobs";
+import { doctor, probeMedia } from "@/server/runtime";
+import { soundtrackSfx } from "@/server/audio";
+
+type Context = { params: Promise<{ path: string[] }> };
+function checkOrigin(req: NextRequest) {
+  const host = req.headers.get("host")?.split(":")[0];
+  if (host !== "127.0.0.1" && host !== "localhost") throw new StudioError("This studio is available on localhost only.", 403);
+  if (req.method !== "GET" && req.method !== "HEAD") {
+    const origin = req.headers.get("origin");
+    if (!origin || new URL(origin).host !== req.headers.get("host")) throw new StudioError("Local same-origin requests are required.", 403);
+  }
+}
+async function serveFile(req: NextRequest, file: string, mime: string, downloadName?: string) {
+  const data = await fs.readFile(file);
+  const headers: Record<string, string> = { "Content-Type": mime, "Cache-Control": "no-store", "Accept-Ranges": "bytes", "X-Content-Type-Options": "nosniff" };
+  if (downloadName) headers["Content-Disposition"] = `attachment; filename="${downloadName.replace(/[^a-zA-Z0-9._-]/g, "-")}"`;
+  const range = req.headers.get("range");
+  if (range) {
+    const match = /^bytes=(\d+)-(\d*)$/.exec(range);
+    if (!match) return new Response(null, { status: 416 });
+    const start = +match[1], end = match[2] ? Math.min(+match[2], data.length - 1) : data.length - 1;
+    if (start > end || start >= data.length) return new Response(null, { status: 416, headers: { "Content-Range": `bytes */${data.length}` } });
+    return new Response(new Uint8Array(data.subarray(start, end + 1)), { status: 206, headers: { ...headers, "Content-Range": `bytes ${start}-${end}/${data.length}`, "Content-Length": String(end - start + 1) } });
+  }
+  return new Response(new Uint8Array(data), { headers: { ...headers, "Content-Length": String(data.length) } });
+}
+async function handle(req: NextRequest, context: Context): Promise<Response> {
+  try {
+    checkOrigin(req); await initialize();
+    const [resource, id, action] = (await context.params).path;
+    const method = req.method;
+    if (resource === "config" && method === "GET") return Response.json({ templates, formats, projectFolder: path.join(dataRoot, "projects") });
+    if (resource === "doctor" && method === "GET") return Response.json(await doctor());
+    if (resource === "audio-preview" && method === "POST") {
+      const project = validateProject(await req.json());
+      if (project.kind !== "video") throw new StudioError("Audio previews require a video project.");
+      return new Response(new Uint8Array(soundtrackSfx(project)), { headers: { "Content-Type": "audio/wav", "Cache-Control": "no-store" } });
+    }
+    if (resource === "projects") {
+      if (method === "GET") return Response.json(id ? await readProject(id) : await listProjects());
+      if (method === "PUT" && id) { const body = await req.json(); if (body.id !== id) throw new StudioError("Project identifier does not match."); return Response.json(await saveProject(body, req.headers.get("if-match") || "")); }
+      if (method === "POST") {
+        const body = await req.json();
+        if (body.copy) {
+          const original = validateProject(body.copy), now = new Date().toISOString();
+          return Response.json(await addProject({ ...original, id: randomUUID(), name: `${original.name.slice(0, 110)} · Copy`, revision: 1, archived: false, createdAt: now, updatedAt: now }), { status: 201 });
+        }
+        const input = z.object({ templateId: z.string(), format: z.enum(["square", "portrait", "reel", "landscape"]), sport: z.enum(["football", "cricket", "basketball", "tennis", "motorsport"]), duration: z.number().optional() }).parse(body);
+        const template = templates.find(t => t.id === input.templateId);
+        if (!template) throw new StudioError("Unknown template.");
+        if (template.kind === "video" && (!input.duration || input.duration < 8 || input.duration > 60)) throw new StudioError("Choose a video duration from 8 through 60 seconds.");
+        return Response.json(await addProject(createProject(input.templateId, input.format as Format, input.sport as Sport, input.duration)), { status: 201 });
+      }
+    }
+    if (resource === "preview" && method === "POST") {
+      const body = await req.json(); const project = validateProject(body.project);
+      return new Response(await compositionHtml(project, body.pageIndex || 0), { headers: { "Content-Type": "text/html; charset=utf-8", "Cache-Control": "no-store" } });
+    }
+    if (resource === "assets") {
+      if (method === "GET") {
+        const assets = await listAssets(); if (!id) return Response.json(assets);
+        const asset = assets.find(a => a.id === id); if (!asset) throw new StudioError("Asset not found.", 404);
+        return serveFile(req, await assetPath(asset), asset.mime);
+      }
+      if (method === "PATCH" && id) {
+        const asset = (await listAssets()).find(a => a.id === id); if (!asset) throw new StudioError("Asset not found.", 404);
+        const input = z.object({ approval: z.enum(["reference", "approved"]), name: z.string().min(1).max(160).optional() }).parse(await req.json());
+        const next = { ...asset, ...input }; await atomicWrite(location("assets", id), next); return Response.json(next);
+      }
+      if (method === "POST") {
+        if (Number(req.headers.get("content-length")) > 150 * 1024 * 1024) throw new StudioError("Import files up to 150 MB.", 413);
+        const form = await req.formData(), file = form.get("file");
+        if (!(file instanceof File) || file.size > 150 * 1024 * 1024 || file.size === 0) throw new StudioError("Choose a non-empty media file up to 150 MB.");
+        const ext = path.extname(file.name).toLowerCase();
+        const mimes: Record<string, string> = { ".png": "image/png", ".jpg": "image/jpeg", ".jpeg": "image/jpeg", ".webp": "image/webp", ".mp4": "video/mp4", ".webm": "video/webm", ".mp3": "audio/mpeg", ".wav": "audio/wav", ".m4a": "audio/mp4", ".ogg": "audio/ogg" };
+        if (!mimes[ext]) throw new StudioError("Use PNG, JPEG, WebP, MP4, WebM, MP3, WAV, M4A, or OGG.");
+        const assetId = randomUUID(), target = location("assets", assetId, ext);
+        try {
+          await fs.writeFile(target, Buffer.from(await file.arrayBuffer()), { flag: "wx" });
+          const metadata = await probeMedia(target);
+          if (mimes[ext].startsWith("image/") && !metadata.width) throw new StudioError("This image could not be decoded.");
+          const asset: Asset = { schemaVersion: 1, id: assetId, name: file.name, file: path.relative(process.cwd(), target), mime: mimes[ext], bytes: file.size, source: `User import: ${file.name}`, approval: form.get("approved") === "true" ? "approved" : "reference", createdAt: new Date().toISOString(), ...metadata };
+          await atomicWrite(location("assets", assetId), asset); return Response.json(asset, { status: 201 });
+        } catch (e) { await fs.unlink(target).catch(() => {}); throw e; }
+      }
+    }
+    if (resource === "exports") {
+      if (method === "GET") {
+        if (!id) return Response.json(await listJobs());
+        const job = await readJob(id);
+        if (action === "poster") return serveFile(req, path.join(location("renders", id, ""), "poster.png"), "image/png");
+        if (action === "file") {
+          if (!job.output || job.status !== "completed" || path.basename(job.output) !== job.output) throw new StudioError("Export is not ready.", 404);
+          const mime = { mp4: "video/mp4", png: "image/png", jpeg: "image/jpeg", zip: "application/zip" }[job.outputType];
+          return serveFile(req, path.join(location("renders", id, ""), job.output), mime, req.nextUrl.searchParams.has("download") ? job.output : undefined);
+        }
+        return Response.json(job);
+      }
+      if (method === "POST") {
+        if (id && action === "cancel") return Response.json(await cancelJob(id));
+        if (id && action === "retry") return Response.json(await retryJob(id));
+        const body = z.object({ projectId: z.string(), etag: z.string(), format: z.enum(["square", "portrait", "reel", "landscape"]), outputType: z.enum(["png", "jpeg", "zip", "mp4"]) }).parse(await req.json());
+        const current = await readProject(body.projectId);
+        if (body.etag !== current.etag) throw new StudioError("Save or reload the latest project before exporting.", 409);
+        return Response.json(await enqueue(current.project, body.format, body.outputType), { status: 202 });
+      }
+    }
+    throw new StudioError("Studio route not found.", 404);
+  } catch (error) {
+    const status = error instanceof StudioError ? error.status : error instanceof z.ZodError ? 400 : (error as NodeJS.ErrnoException).code === "ENOENT" ? 404 : 500;
+    return Response.json({ error: (error as Error).message }, { status });
+  }
+}
+export const GET = handle;
+export const POST = handle;
+export const PUT = handle;
+export const PATCH = handle;

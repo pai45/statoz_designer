@@ -1,0 +1,41 @@
+{
+  "name": "statoz-designer",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "node scripts/studio.mjs dev",
+    "build": "node scripts/build-compositions.mjs && next build",
+    "start": "node scripts/studio.mjs start",
+    "worker": "tsx src/server/worker.ts",
+    "lint": "eslint .",
+    "typecheck": "tsc --noEmit",
+    "test": "tsx --test tests/*.test.ts",
+    "test:media": "tsx scripts/verify-media.ts",
+    "test:studio": "tsx scripts/verify-studio.ts",
+    "test:ui": "tsx scripts/verify-ui.ts",
+    "test:audio-video": "tsx scripts/verify-audio-video.ts",
+    "doctor": "tsx scripts/doctor.ts",
+    "compositions": "node scripts/build-compositions.mjs"
+  },
+  "dependencies": {
+    "next": "16.3.2",
+    "react": "19.2.8",
+    "react-dom": "19.2.8",
+    "zod": "^4.1.0",
+    "fflate": "^0.8.2"
+  },
+  "devDependencies": {
+    "@tailwindcss/postcss": "^4",
+    "tailwindcss": "^4",
+    "@types/node": "^22",
+    "@types/react": "^19",
+    "@types/react-dom": "^19",
+    "typescript": "^5",
+    "eslint": "^9",
+    "eslint-config-next": "16.3.2",
+    "esbuild": "^0.25",
+    "tsx": "^4",
+    "playwright": "^1.55"
+  }
+}

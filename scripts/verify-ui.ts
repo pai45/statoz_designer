@@ -1,0 +1,63 @@
+import assert from "node:assert/strict";
+import fs from "node:fs/promises";
+import path from "node:path";
+import { chromium } from "playwright";
+import type { ProjectEnvelope } from "../src/domain/project";
+
+const base = "http://127.0.0.1:3000", output = path.resolve("test-results/studio");
+await fs.mkdir(output, { recursive: true });
+const browser = await chromium.launch();
+try {
+  const page = await browser.newPage({ viewport: { width: 1440, height: 1000 } });
+  const errors: string[] = []; page.on("pageerror", e => errors.push(e.message));
+  await page.goto(base);
+  await page.getByRole("button", { name: "Templates", exact: true }).click();
+  assert.equal(await page.locator(".template-card").count(), 12);
+  await page.getByRole("tab", { name: "Sports", exact: true }).click(); assert.equal(await page.locator(".template-card").count(), 5);
+  await page.getByRole("tab", { name: "Sports", exact: true }).press("Home"); assert.equal(await page.getByRole("tab", { name: "All templates" }).getAttribute("aria-selected"), "true");
+  await page.screenshot({ path: path.join(output, "templates-desktop.png"), fullPage: true });
+  await page.getByRole("button", { name: "Use Feature promo template" }).click();
+  assert.equal(await page.getByRole("button", { name: "Create design", exact: true }).isDisabled(), true);
+  await page.getByRole("button", { name: "Close new project dialog" }).click();
+  await page.getByRole("button", { name: "Assets & brand", exact: true }).click(); await page.getByRole("tab", { name: "Brand system" }).click();
+  await page.screenshot({ path: path.join(output, "brand-desktop.png"), fullPage: true });
+  await page.getByRole("button", { name: "Exports", exact: true }).click();
+  await page.getByRole("button", { name: "Check render setup" }).click(); await page.locator(".runtime-checks").waitFor();
+  assert.equal(await page.locator(".runtime-checks .missing").count(), 0);
+  await page.screenshot({ path: path.join(output, "exports-desktop.png"), fullPage: true });
+  await page.setViewportSize({ width: 412, height: 900 }); await page.getByRole("button", { name: "Projects", exact: true }).click();
+  assert.ok(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth));
+  await page.screenshot({ path: path.join(output, "projects-mobile.png"), fullPage: true });
+  console.log("PASS mobile navigation labels, responsive width, template filtering, keyboard chips, and runtime checks");
+
+  await page.setViewportSize({ width: 1440, height: 1000 });
+  const listing = await (await fetch(`${base}/api/projects`)).json() as { projects: ProjectEnvelope[] };
+  const candidate = listing.projects.find(p => p.project.name.startsWith("Studio launch"))!;
+  await page.goto(`${base}/?project=${candidate.project.id}`);
+  await page.getByLabel("Headline", { exact: false }).waitFor();
+  await page.route(`**/api/projects/${candidate.project.id}`, async route => {
+    if (route.request().method() === "PUT") await route.fulfill({ status: 409, contentType: "application/json", body: JSON.stringify({ error: "This project changed outside the editor." }) }); else await route.continue();
+  });
+  await page.getByLabel("Headline", { exact: false }).fill("An unsaved local edit");
+  await page.getByRole("button", { name: "Save my edits as copy" }).waitFor();
+  await page.getByRole("button", { name: "Save my edits as copy" }).click();
+  await page.waitForURL(url => url.searchParams.get("project") !== candidate.project.id);
+  assert.equal(await page.getByLabel("Headline", { exact: false }).inputValue(), "An unsaved local edit");
+  console.log("PASS conflict recovery preserves browser edits in a new project");
+  await page.unrouteAll({ behavior: "wait" });
+  await page.getByLabel("Headline", { exact: false }).fill("Read every\nmoment.");
+  await page.getByText("All changes saved locally", { exact: true }).waitFor();
+  await page.waitForFunction(() => !(document.querySelector('.editor-top-actions .button-primary') as HTMLButtonElement).disabled);
+  await page.getByRole("button", { name: "Export", exact: true }).click();
+  const dialog = page.locator(".export-modal"); await dialog.waitFor();
+  await dialog.getByRole("checkbox").first().check();
+  await page.getByText("All changes saved locally", { exact: true }).waitFor();
+  const currentId = new URL(page.url()).searchParams.get("project")!;
+  const updated = await (await fetch(`${base}/api/projects/${currentId}`)).json() as ProjectEnvelope;
+  assert.ok(updated.project.outputVariants.includes("square"));
+  await dialog.getByRole("button", { name: /^Export \d/ }).click();
+  await page.getByRole("heading", { name: "Ready to share." }).waitFor();
+  console.log("PASS export dialog saves output variants and queues through the UI");
+  assert.deepEqual(errors, []);
+  await fs.writeFile(path.join(output, "ui-report.json"), JSON.stringify({ passed: true, browserErrors: errors }, null, 2));
+} finally { await browser.close(); }

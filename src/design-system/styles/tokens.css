@@ -1,0 +1,352 @@
+:root {
+  color-scheme: dark;
+
+  /* Backgrounds */
+  --ds-color-background-primary: #0d111a;
+  --ds-color-background-secondary: #0f172b;
+  --ds-color-background-elevated: #1d293d;
+  --ds-color-background-muted: #070c1f;
+  --ds-color-background-nav: #1a253a;
+  --ds-color-background-quiz-hub: #06152b;
+  --ds-color-background-data: #10192d;
+
+  /* Text */
+  --ds-color-text-default: #ffffff;
+  --ds-color-text-muted: #90a1b9;
+  --ds-color-text-subtle: #cad5e2;
+  --ds-color-text-accent: #5cdfff;
+  --ds-color-text-inverse: #081019;
+  --ds-color-text-disabled: #6a7282;
+
+  /* Borders */
+  --ds-color-border-default: #314158;
+  --ds-color-border-muted: #243654;
+  --ds-color-border-subtle: #20293e;
+  --ds-color-border-strong: #45556c;
+  --ds-color-border-active: rgb(173 70 255 / 50%);
+  --ds-color-border-inactive: #94a3b8;
+
+  /* Accents */
+  --ds-color-accent-white: var(--ds-color-text-default);
+  --ds-color-accent-cyan: #5cdfff;
+  --ds-color-accent-violet: #c27aff;
+  --ds-color-accent-orange: #ff8904;
+  --ds-color-accent-lime: #51ff94;
+  --ds-color-accent-gold: #fdc700;
+  --ds-color-accent-blue: #2b7fff;
+  --ds-color-accent-racing: #f42d29;
+  --ds-color-accent-pink: #ff94c1;
+
+  /* Rarity — collectible card tiers. Gold and platinum reuse the accents the
+     palette already holds rather than growing a second gold. */
+  --ds-color-rarity-bronze-light: #e8a45c;
+  --ds-color-rarity-bronze-base: #cd7f32;
+  --ds-color-rarity-bronze-deep: #5c3a1a;
+  --ds-color-rarity-silver-light: #f1f5f9;
+  --ds-color-rarity-silver-base: #cbd5e1;
+  --ds-color-rarity-silver-deep: #64748b;
+  --ds-color-rarity-gold-light: #ffe9a8;
+  --ds-color-rarity-gold-base: var(--ds-color-accent-gold);
+  --ds-color-rarity-gold-deep: #b8860b;
+  --ds-color-rarity-platinum-light: #b9f6ff;
+  --ds-color-rarity-platinum-base: var(--ds-color-accent-cyan);
+  --ds-color-rarity-platinum-deep: var(--ds-color-accent-violet);
+
+  /* Feedback */
+  --ds-color-success: #05df72;
+  --ds-color-warning: #fdc700;
+  --ds-color-danger: #ff4d4d;
+  --ds-color-info: #3c95da;
+
+  /* Overlays */
+  --ds-color-overlay-subtle: rgb(255 255 255 / 10%);
+  --ds-color-overlay-scrim: rgb(0 0 0 / 84%);
+  --ds-color-overlay-plate: rgb(0 0 0 / 60%);
+  --ds-color-overlay-shop-footer: rgb(0 0 0 / 88%);
+  --ds-color-overlay-shop-ownership: rgb(0 0 0 / 66%);
+
+  /* Fixture-card chrome */
+  --ds-color-fixture-shadow: #04060b;
+  --ds-color-fixture-base: #141c2b;
+  --ds-color-fixture-strip: #0f1826;
+  /* The brighter fill a fixture card's call-to-action strip takes. */
+  --ds-color-fixture-strip-focal: #173a5e;
+  --ds-color-fixture-border: #2a3550;
+  --ds-color-fixture-predicted: #2c7a8c;
+  --ds-color-fixture-kickoff: #c8a45a;
+  --ds-color-fixture-dim-name: #aeb7c5;
+  --ds-color-fixture-score: #9fb0c2;
+  --ds-color-fixture-result: #bac5d3;
+
+  /* Gradients */
+  --ds-gradient-app-background: linear-gradient(135deg, #010916 0%, #0e2646 100%);
+  --ds-gradient-nav-bar: linear-gradient(
+    to top,
+    rgb(14 22 43 / 97.6%) 0%,
+    rgb(28 40 60 / 97.6%) 100%
+  );
+  --ds-gradient-arena-backdrop: linear-gradient(
+    to bottom,
+    #02060f 0%,
+    #06121f 46%,
+    #01040a 100%
+  );
+  --ds-gradient-step-passed: linear-gradient(to right, #00c850 0%, #009865 100%);
+  --ds-gradient-step-current: linear-gradient(to right, #ffb13d 0%, #ff7a1a 100%);
+  --ds-gradient-step-failed: linear-gradient(to right, #ff6b6b 0%, #c81e30 100%);
+  --ds-gradient-pack-headline: linear-gradient(135deg, #5cdfff 0%, #d4ff5c 100%);
+  --ds-gradient-card-nameplate: linear-gradient(to right, #202836 0%, #121824 100%);
+  --ds-gradient-fixture-card: linear-gradient(to bottom, #1b2336 0%, #121a28 100%);
+  --ds-gradient-trending-card: linear-gradient(
+    to bottom,
+    color-mix(
+        in srgb,
+        var(--ds-color-accent-cyan) 4%,
+        var(--ds-color-background-elevated)
+      )
+      0%,
+    var(--ds-color-background-elevated) 100%
+  );
+  --ds-gradient-league-table: linear-gradient(135deg, #121b30 0%, #0e1628 100%);
+  /* The bed a decision sheet is taken on, raked from lit slate to hull dark. */
+  --ds-gradient-hud-sheet: linear-gradient(135deg, #152139 0%, #0b101c 100%);
+  /* The lit top edge of that sheet: cyan into violet, fading at both ends. */
+  --ds-gradient-hud-edge: linear-gradient(
+    to right,
+    transparent 0%,
+    var(--ds-color-accent-cyan) 28%,
+    var(--ds-color-accent-violet) 72%,
+    transparent 100%
+  );
+  --ds-gradient-dock-bar: linear-gradient(
+    to bottom,
+    color-mix(in srgb, #1d293d 88%, transparent) 0%,
+    #17233d 100%
+  );
+  --ds-gradient-streak-milestone: linear-gradient(
+    135deg,
+    color-mix(in srgb, var(--ds-color-accent-gold) 24%, transparent) 0%,
+    var(--ds-color-background-secondary) 50%,
+    var(--ds-color-background-elevated) 100%
+  );
+
+  /* Elevation */
+  --ds-shadow-hard-drop: 0 4px 0 rgb(0 0 0 / 20%);
+  --ds-shadow-panel: 0 2px 12px rgb(0 0 0 / 35%);
+  --ds-shadow-streak-card: 0 5px 0 var(--ds-color-fixture-shadow);
+
+  /* Shape — StatOz cuts corners instead of rounding them. */
+  --ds-shape-signal-cut: 12px;
+  --ds-shape-signal-notch: 34px;
+  --ds-shape-signal-step: 8px;
+  --ds-shape-signal-lift: 6px;
+  --ds-shape-fixture-cut: 12px;
+  --ds-shape-fixture-notch-width: 96px;
+  --ds-shape-fixture-notch-depth: 22px;
+  --ds-shape-fixture-notch-slope: 12px;
+  --ds-shape-fixture-lift: 6px;
+  --ds-shape-tab-chamfer: 16px;
+  --ds-shape-field-cut: 10px;
+  --ds-shape-panel-cut: 12px;
+  --ds-shape-hud-cut: 14px;
+  --ds-shape-hud-accent-cut: 4px;
+  --ds-shape-hud-sheet-cut: 18px;
+  --ds-shape-hud-sheet-accent-cut: 4px;
+  --ds-shape-compact-hud-cut: 12px;
+  --ds-shape-compact-hud-accent-cut: 3px;
+  /* A card scales its chamfer to its own width; these are the resting values a
+     card overrides. See cardCuts() in design-system/tokens/shape.ts. */
+  --ds-card-cut-big: 14px;
+  --ds-card-cut-small: 7px;
+  --ds-radius-none: 0;
+  --ds-radius-sm: 2px;
+  --ds-radius-md: 4px;
+  --ds-radius-pill: 999px;
+
+  /* Clip paths — kept in sync with design-system/tokens/shape.ts */
+  --ds-clip-signal: polygon(
+    12px 0,
+    calc(100% - 42px) 0,
+    calc(100% - 34px) 8px,
+    100% 8px,
+    100% calc(100% - 12px),
+    calc(100% - 12px) 100%,
+    12px 100%,
+    0 calc(100% - 12px),
+    0 12px
+  );
+  --ds-clip-fixture: polygon(
+    0 0,
+    calc(50% - 60px) 0,
+    calc(50% - 48px) 22px,
+    calc(50% + 48px) 22px,
+    calc(50% + 60px) 0,
+    100% 0,
+    100% calc(100% - 12px),
+    calc(100% - 12px) 100%,
+    12px 100%,
+    0 calc(100% - 12px)
+  );
+  --ds-clip-fixture-flat: polygon(
+    0 0,
+    100% 0,
+    100% calc(100% - 12px),
+    calc(100% - 12px) 100%,
+    12px 100%,
+    0 calc(100% - 12px)
+  );
+  --ds-plate-cut: 9px;
+  --ds-clip-octagon-plate: polygon(
+    var(--ds-plate-cut) 0,
+    calc(100% - var(--ds-plate-cut)) 0,
+    100% var(--ds-plate-cut),
+    100% calc(100% - var(--ds-plate-cut)),
+    calc(100% - var(--ds-plate-cut)) 100%,
+    var(--ds-plate-cut) 100%,
+    0 calc(100% - var(--ds-plate-cut)),
+    0 var(--ds-plate-cut)
+  );
+  --ds-clip-octagon: polygon(
+    15% 0,
+    85% 0,
+    100% 15%,
+    100% 85%,
+    85% 100%,
+    15% 100%,
+    0 85%,
+    0 15%
+  );
+  --ds-clip-field: polygon(
+    10px 0,
+    calc(100% - 10px) 0,
+    100% 10px,
+    100% calc(100% - 10px),
+    calc(100% - 10px) 100%,
+    10px 100%,
+    0 calc(100% - 10px),
+    0 10px
+  );
+  --ds-clip-chip: polygon(
+    8px 0,
+    calc(100% - 8px) 0,
+    100% 8px,
+    100% calc(100% - 8px),
+    calc(100% - 8px) 100%,
+    8px 100%,
+    0 calc(100% - 8px),
+    0 8px
+  );
+  --ds-clip-panel: polygon(
+    12px 0,
+    calc(100% - 12px) 0,
+    100% 12px,
+    100% calc(100% - 12px),
+    calc(100% - 12px) 100%,
+    12px 100%,
+    0 calc(100% - 12px),
+    0 12px
+  );
+  --ds-clip-hud: polygon(
+    14px 0,
+    calc(100% - 4px) 0,
+    100% 4px,
+    100% calc(100% - 14px),
+    calc(100% - 14px) 100%,
+    4px 100%,
+    0 calc(100% - 4px),
+    0 14px
+  );
+  --ds-clip-hud-sheet: polygon(
+    18px 0,
+    calc(100% - 4px) 0,
+    100% 4px,
+    100% calc(100% - 18px),
+    calc(100% - 18px) 100%,
+    4px 100%,
+    0 calc(100% - 4px),
+    0 18px
+  );
+  --ds-clip-compact-hud: polygon(
+    12px 0,
+    calc(100% - 3px) 0,
+    100% 3px,
+    100% calc(100% - 12px),
+    calc(100% - 12px) 100%,
+    3px 100%,
+    0 calc(100% - 3px),
+    0 12px
+  );
+  /* Only correct at the resting cut sizes above: the cuts in this polygon
+     resolve here on :root, so a card that overrides --ds-card-cut-* must use
+     cardClipPath from design-system/tokens/shape.ts instead. */
+  --ds-clip-card: polygon(
+    var(--ds-card-cut-big) 0,
+    calc(100% - var(--ds-card-cut-small)) 0,
+    100% var(--ds-card-cut-small),
+    100% calc(100% - var(--ds-card-cut-big)),
+    calc(100% - var(--ds-card-cut-big)) 100%,
+    var(--ds-card-cut-small) 100%,
+    0 calc(100% - var(--ds-card-cut-small)),
+    0 var(--ds-card-cut-big)
+  );
+  --ds-clip-tab-plate: polygon(
+    0 0,
+    100% 0,
+    100% calc(100% - 16px),
+    calc(100% - 16px) 100%,
+    16px 100%,
+    0 calc(100% - 16px)
+  );
+
+  /* Spacing */
+  --ds-space-0: 0;
+  --ds-space-2: 0.125rem;
+  --ds-space-4: 0.25rem;
+  --ds-space-6: 0.375rem;
+  --ds-space-8: 0.5rem;
+  --ds-space-10: 0.625rem;
+  --ds-space-12: 0.75rem;
+  --ds-space-14: 0.875rem;
+  --ds-space-16: 1rem;
+  --ds-space-20: 1.25rem;
+  --ds-space-24: 1.5rem;
+  --ds-space-28: 1.75rem;
+  --ds-space-32: 2rem;
+  --ds-space-40: 2.5rem;
+  --ds-space-48: 3rem;
+  --ds-space-64: 4rem;
+
+  /* Typography */
+  --ds-font-body: var(--font-onest), "Onest", system-ui, sans-serif;
+  --ds-font-display: var(--font-orbitron), "Orbitron", var(--font-onest),
+    "Onest", system-ui, sans-serif;
+  --ds-font-mono: ui-monospace, "SFMono-Regular", monospace;
+  --ds-text-nano: 0.5rem;
+  --ds-text-micro: 0.5625rem;
+  --ds-text-2xs: 0.625rem;
+  --ds-text-xs: 0.6875rem;
+  --ds-text-compact: 0.75rem;
+  --ds-text-sm: 0.8125rem;
+  --ds-text-md: 0.875rem;
+  --ds-text-base: 0.9375rem;
+  --ds-text-lg: 1.0625rem;
+  --ds-text-badge: 1.125rem;
+  --ds-text-xl: 1.25rem;
+  --ds-text-2xl: 1.375rem;
+  --ds-text-3xl: 2rem;
+  --ds-text-hero: 2.625rem;
+  --ds-text-celebration: 3.375rem;
+  --ds-text-countdown: 4.5rem;
+  --ds-leading-compact: 1;
+  --ds-leading-tight: 1.2;
+  --ds-leading-body: 1.4;
+  --ds-leading-relaxed: 1.6;
+  --ds-tracking-tight: 0.02em;
+  --ds-tracking-label: 0.05em;
+  --ds-tracking-wide: 0.07em;
+  --ds-tracking-display: 0.075em;
+  --ds-tracking-ultra: 0.12em;
+  --ds-tracking-mega: 0.2em;
+  --ds-tracking-max: 0.3em;
+  --ds-numeric-tabular: "tnum" 1;
+}

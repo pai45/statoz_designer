@@ -1,0 +1,39 @@
+﻿{
+    "version":  1,
+    "capturedAt":  "2026-09-15",
+    "webRevision":  "1b9a47a39694eff042f2f4a72e3408e355ebfeec",
+    "flutterRevision":  "02237f689e5484ceafddb027ecd16e46009c48a1",
+    "webSource":  "C:/Users/priya/OneDrive/Desktop/statoz_web",
+    "flutterSource":  "C:/Users/priya/OneDrive/Desktop/flutter_projects/card_game",
+    "rendererSource":  "C:/Users/priya/.codex/skills/statoz-video/scripts/render-video.mjs",
+    "files":  [
+                  {
+                      "path":  "src/design-system/styles/tokens.css",
+                      "sha256":  "4a55e7945e39e5f0c5d8a0fefe7a57663aa0ddd03c7d9979579d88904ad2a6a9"
+                  },
+                  {
+                      "path":  "public/assets/brand/logo.png",
+                      "sha256":  "be73bc45c4189247a80272898ce55d4231ea07d25c045d058de0949a3c2af2c3"
+                  },
+                  {
+                      "path":  "public/assets/library/stadium.png",
+                      "sha256":  "ac0b452128c01f789a9a0449a8799b6566aaa91f1a9ab68e7f75f62f0c6e66c0"
+                  },
+                  {
+                      "path":  "public/assets/library/arena.png",
+                      "sha256":  "a804cf7e7aaf526e7c267ce0ed1ecbcdf2af65b5d6f38c931c408e37718f9aae"
+                  },
+                  {
+                      "path":  "src/app/fonts/onest-latin-variable.woff2",
+                      "sha256":  "052df74533250c2e0ca0c4bdd32de594e107d99c1648e63820ef9c6142067828"
+                  },
+                  {
+                      "path":  "src/app/fonts/orbitron-latin-variable.woff2",
+                      "sha256":  "c25a9f9da5d9f3db1bf2a01474722dc9b377675b7bbab6d0dfda6902794fd1ed"
+                  },
+                  {
+                      "path":  "vendor/statoz-video/render-video.mjs",
+                      "sha256":  "2d0b9990d64f38dffb0526e1210986f60406dd505caf9d9ed7d668515052b1f8"
+                  }
+              ]
+}
