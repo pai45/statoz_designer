@@ -5,6 +5,12 @@ const worker = spawn(process.execPath, ['--import', 'tsx', 'src/server/worker.ts
 children.push(worker);
 const app = spawn(process.execPath, ['node_modules/next/dist/bin/next', mode, '--hostname', '127.0.0.1', '--port', process.env.PORT || '3000'], { stdio: 'inherit', windowsHide: true });
 children.push(app);
+const publisher = spawn(process.execPath, ['--import', 'tsx', 'src/server/publisher.ts'], { stdio: 'inherit', windowsHide: true });
+children.push(publisher);
+publisher.on('exit', code => { if (!stopping) console.error(`Posting window process exited (code ${code}). Exports still work; restart the studio to post to social.`); });
+const assistant = spawn(process.execPath, ['--import', 'tsx', 'src/server/agent.ts'], { stdio: 'inherit', windowsHide: true });
+children.push(assistant);
+assistant.on('exit', code => { if (!stopping) console.error(`Assistant process exited (code ${code}). Everything else still works; restart the studio to run assistants.`); });
 let stopping = false;
 function stop(code = 0) { if (stopping) return; stopping = true; for (const child of children) child.kill('SIGTERM'); setTimeout(() => process.exit(code), 1500).unref(); }
 process.on('SIGINT', () => stop()); process.on('SIGTERM', () => stop());

@@ -21,7 +21,7 @@ export function Preview({ project, time, pageIndex, guides, zoom, onOverflow }: 
   const live = useRef({ project, time, pageIndex, guides });
   const overflowRef = useRef(onOverflow);
   useEffect(() => { live.current = { project, time, pageIndex, guides }; overflowRef.current = onOverflow; }, [project, time, pageIndex, guides, onOverflow]);
-  const mediaKey = project.pages.map(s => s.assetId).join("|");
+  const mediaKey = project.pages.map(s => `${s.assetId}:${s.tabletAssetId}`).join("|");
   useEffect(() => {
     const observer = new ResizeObserver(([entry]) => setSize({ width: entry.contentRect.width, height: entry.contentRect.height }));
     if (holder.current) observer.observe(holder.current); return () => observer.disconnect();

@@ -4,13 +4,33 @@ import { spawn, execFile } from "node:child_process";
 import { promisify } from "node:util";
 import type { Page } from "playwright";
 import { zipSync } from "fflate";
+import { PDFDocument } from "pdf-lib";
+import PptxGenJS from "pptxgenjs";
 import { durationOf, type Project, type RenderJob } from "@/domain/project";
+import { opaquePngFormats } from "@/domain/app-creatives";
 import { location, updateJob } from "./storage";
-import { ffmpegPath, launchBrowser } from "./runtime";
+import { ffmpegPath, launchBrowser, pngMetadata } from "./runtime";
 import { soundtrackSfx } from "./audio";
 
 const exec = promisify(execFile);
 export class Cancelled extends Error { constructor() { super("Export cancelled."); } }
+async function convertPng(bytes: Buffer, pixelFormat: "rgb24" | "rgba") {
+  const child = spawn(ffmpegPath(), ["-hide_banner", "-loglevel", "error", "-f", "image2pipe", "-vcodec", "png", "-i", "pipe:0", "-frames:v", "1", "-f", "image2pipe", "-vcodec", "png", "-pix_fmt", pixelFormat, "pipe:1"], { stdio: ["pipe", "pipe", "pipe"], windowsHide: true });
+  const chunks: Buffer[] = []; let stderr = "";
+  child.stdout!.on("data", chunk => chunks.push(Buffer.from(chunk)));
+  child.stderr!.on("data", chunk => { stderr = (stderr + chunk).slice(-3000); });
+  const completed = new Promise<void>((resolve, reject) => { child.on("error", reject); child.on("close", code => code === 0 ? resolve() : reject(new Error(`PNG normalization failed: ${stderr}`))); });
+  child.stdin!.end(bytes); await completed;
+  return Buffer.concat(chunks);
+}
+async function storeReadyPng(bytes: Buffer, job: RenderJob) {
+  const normalized = opaquePngFormats.has(job.format) ? await convertPng(bytes, "rgb24") : job.format === "playIcon" ? await convertPng(bytes, "rgba") : bytes;
+  const metadata = pngMetadata(normalized);
+  if (metadata.width !== job.width || metadata.height !== job.height) throw new Error(`Rendered PNG is ${metadata.width} × ${metadata.height}; expected ${job.width} × ${job.height}.`);
+  if (opaquePngFormats.has(job.format) && metadata.hasAlpha) throw new Error("Store PNG unexpectedly contains an alpha channel.");
+  if (job.format === "playIcon" && !metadata.hasAlpha) throw new Error("Google Play icon must be a 32-bit PNG with an alpha channel.");
+  return normalized;
+}
 export async function draw(page: Page, time: number, pageIndex = 0) {
   await page.evaluate(async ({ time, pageIndex }) => {
     let timer: ReturnType<typeof setTimeout> | undefined;
@@ -43,15 +63,36 @@ export async function renderJob(job: RenderJob) {
     await checkFrame();
     await page.screenshot({ path: path.join(folder, "poster.png"), type: "png" });
     if (job.outputType === "png" || job.outputType === "jpeg") {
-      await page.screenshot({ path: temporary, type: job.outputType, ...(job.outputType === "jpeg" ? { quality: 95 } : {}) });
-    } else if (job.outputType === "zip") {
-      const files: Record<string, Uint8Array> = {};
+      if (job.outputType === "png") await fs.writeFile(temporary, await storeReadyPng(await page.screenshot({ type: "png" }), job), { flag: "wx" });
+      else await page.screenshot({ path: temporary, type: "jpeg", quality: 95 });
+    } else if (["zip", "pdf", "pptx"].includes(job.outputType)) {
+      const slides: Buffer[] = [];
       for (let index = 0; index < project.pages.length; index++) {
         await draw(page, 0, index); await checkFrame();
-        files[`${String(index + 1).padStart(2, "0")}-${project.format}.png`] = await page.screenshot({ type: "png" });
+        slides.push(await storeReadyPng(await page.screenshot({ type: "png" }), job));
         await updateJob(job.id, { progress: (index + 1) / project.pages.length * .95 });
       }
-      await fs.writeFile(temporary, zipSync(files, { level: 0 }), { flag: "wx" });
+      if (job.outputType === "zip") {
+        const files = Object.fromEntries(slides.map((slide, index) => [`${String(index + 1).padStart(2, "0")}-${project.format}.png`, slide]));
+        await fs.writeFile(temporary, zipSync(files, { level: 0 }), { flag: "wx" });
+      } else if (job.outputType === "pdf") {
+        const pdf = await PDFDocument.create();
+        pdf.setTitle(project.name); pdf.setAuthor("StatOz Designer"); pdf.setCreator("StatOz Designer");
+        for (const bytes of slides) {
+          const image = await pdf.embedPng(bytes), slide = pdf.addPage([960, 540]);
+          slide.drawImage(image, { x: 0, y: 0, width: 960, height: 540 });
+        }
+        await fs.writeFile(temporary, await pdf.save({ useObjectStreams: false }), { flag: "wx" });
+      } else {
+        const pptx = new PptxGenJS();
+        pptx.layout = "LAYOUT_WIDE"; pptx.author = "StatOz Designer"; pptx.company = "StatOz"; pptx.subject = "StatOz pitch deck"; pptx.title = project.name;
+        for (const bytes of slides) {
+          const slide = pptx.addSlide();
+          slide.background = { color: "0D111A" };
+          slide.addImage({ data: `data:image/png;base64,${bytes.toString("base64")}`, x: 0, y: 0, w: 13.333, h: 7.5 });
+        }
+        await pptx.writeFile({ fileName: temporary, compression: true });
+      }
     } else {
       const duration = durationOf(project), fps = 30, frames = Math.round(duration * fps);
       const args = ["-hide_banner", "-loglevel", "error", "-f", "image2pipe", "-vcodec", "png", "-framerate", String(fps), "-i", "pipe:0"];

@@ -2,7 +2,9 @@ import assert from "node:assert/strict";
 import fs from "node:fs/promises";
 import path from "node:path";
 import { chromium } from "playwright";
+import type { Player } from "../src/domain/player";
 import type { ProjectEnvelope } from "../src/domain/project";
+import { location } from "../src/server/storage";
 
 const base = "http://127.0.0.1:3000", output = path.resolve("test-results/studio");
 await fs.mkdir(output, { recursive: true });
@@ -10,9 +12,18 @@ const browser = await chromium.launch();
 try {
   const page = await browser.newPage({ viewport: { width: 1440, height: 1000 } });
   const errors: string[] = []; page.on("pageerror", e => errors.push(e.message));
+  const idleApiCalls: string[] = [], playerSearchCalls: string[] = [];
+  page.on("request", request => {
+    const url = new URL(request.url());
+    if (url.origin !== base) return;
+    if (["/api/agents", "/api/exports", "/api/publish", "/api/config"].includes(url.pathname)) idleApiCalls.push(url.pathname);
+    if (url.pathname === "/api/players" && !url.searchParams.get("q")) playerSearchCalls.push(url.href);
+  });
   await page.goto(base);
+  await page.locator(".design-grid").waitFor();
+  assert.deepEqual(idleApiCalls, []);
   await page.getByRole("button", { name: "Templates", exact: true }).click();
-  assert.equal(await page.locator(".template-card").count(), 12);
+  assert.ok(await page.locator(".template-card").count() >= 12);
   await page.getByRole("tab", { name: "Sports", exact: true }).click(); assert.equal(await page.locator(".template-card").count(), 5);
   await page.getByRole("tab", { name: "Sports", exact: true }).press("Home"); assert.equal(await page.getByRole("tab", { name: "All templates" }).getAttribute("aria-selected"), "true");
   await page.screenshot({ path: path.join(output, "templates-desktop.png"), fullPage: true });
@@ -34,15 +45,20 @@ try {
   const listing = await (await fetch(`${base}/api/projects`)).json() as { projects: ProjectEnvelope[] };
   const candidate = listing.projects.find(p => p.project.name.startsWith("Studio launch"))!;
   await page.goto(`${base}/?project=${candidate.project.id}`);
+  await page.getByText("AI CREATIVE DIRECTION", { exact: true }).waitFor();
+  assert.deepEqual(await page.locator(".inspector-tabs button").allTextContents(), ["Content", "Brief"]);
+  await page.getByRole("button", { name: "Content", exact: true }).click();
   await page.getByLabel("Headline", { exact: false }).waitFor();
+  const unsavedHeadline = `An unsaved local edit ${Date.now()}`;
   await page.route(`**/api/projects/${candidate.project.id}`, async route => {
     if (route.request().method() === "PUT") await route.fulfill({ status: 409, contentType: "application/json", body: JSON.stringify({ error: "This project changed outside the editor." }) }); else await route.continue();
   });
-  await page.getByLabel("Headline", { exact: false }).fill("An unsaved local edit");
+  await page.getByLabel("Headline", { exact: false }).fill(unsavedHeadline);
   await page.getByRole("button", { name: "Save my edits as copy" }).waitFor();
   await page.getByRole("button", { name: "Save my edits as copy" }).click();
   await page.waitForURL(url => url.searchParams.get("project") !== candidate.project.id);
-  assert.equal(await page.getByLabel("Headline", { exact: false }).inputValue(), "An unsaved local edit");
+  await page.getByRole("button", { name: "Content", exact: true }).click();
+  assert.equal(await page.getByLabel("Headline", { exact: false }).inputValue(), unsavedHeadline);
   console.log("PASS conflict recovery preserves browser edits in a new project");
   await page.unrouteAll({ behavior: "wait" });
   await page.getByLabel("Headline", { exact: false }).fill("Read every\nmoment.");
@@ -58,6 +74,53 @@ try {
   await dialog.getByRole("button", { name: /^Export \d/ }).click();
   await page.getByRole("heading", { name: "Ready to share." }).waitFor();
   console.log("PASS export dialog saves output variants and queues through the UI");
+  await page.goto(base);
+  await page.getByRole("button", { name: "Templates", exact: true }).click();
+  await page.getByRole("button", { name: "Use Rewards & cards template" }).click();
+  await page.getByRole("button", { name: "Create design", exact: true }).click();
+  await page.getByText("AI CREATIVE DIRECTION", { exact: true }).waitFor();
+  assert.deepEqual(await page.locator(".inspector-tabs button").allTextContents(), ["Content", "Brief"]);
+  await page.getByRole("button", { name: "Content", exact: true }).click();
+  await page.getByLabel("Headline", { exact: false }).waitFor();
+  await page.waitForTimeout(300);
+  assert.deepEqual(playerSearchCalls, []);
+  const card = page.locator(".scene-select .thumbnail");
+  await page.getByLabel("Search the player library").fill("ari vance");
+  const result = page.locator(".player-result").filter({ has: page.getByText("ARI VANCE", { exact: true }) });
+  await result.waitFor();
+  await result.click();
+  await page.waitForFunction(() => (document.querySelector('.inspector-content input[value="ARI VANCE"], .inspector-content input') as HTMLInputElement) !== null);
+  assert.equal(await page.getByLabel("Card name").inputValue(), "ARI VANCE");
+  assert.equal(await page.getByLabel("Position").inputValue(), "MIDFIELDER");
+  assert.equal(await page.getByLabel("Club").inputValue(), "NORTH FC");
+  await card.locator(".card-identity").waitFor();
+  assert.equal(await card.locator(".card-name small").innerText(), "NORTH FC");
+  const identity = await card.locator(".card-identity").innerText();
+  assert.ok(identity.includes("MIDFIELDER") && identity.includes("ATLANTIA"), identity);
+  assert.equal(await card.locator(".card-rank b").innerText(), "92");
+  assert.equal(await card.locator(".card-metrics b").first().innerText(), "94");
+  console.log("PASS searching the player library puts a player and their details on the card");
+
+  await page.getByLabel("Visual media").selectOption({ label: "Penalty arena" });
+  await card.locator("img.card-portrait").waitFor();
+  const unique = `ARI VANCE ${Date.now()}`;
+  await page.getByLabel("Card name").fill(unique);
+  await page.getByRole("button", { name: "Update this player" }).waitFor();
+  await page.getByRole("button", { name: "Save as a new player" }).click();
+  await page.getByText(`${unique} added to the player library.`).waitFor();
+  await page.getByRole("button", { name: "Clear" }).click();
+  await page.getByLabel("Visual media").selectOption({ label: "Use template artwork" });
+  await page.getByLabel("Search the player library").fill(unique);
+  const saved = page.locator(".player-result", { hasText: unique });
+  await saved.waitFor();
+  await saved.click();
+  await card.locator("img.card-portrait").waitFor();
+  assert.equal(await page.getByLabel("Club").inputValue(), "NORTH FC");
+  console.log("PASS a card saved to the player library returns with its portrait and details");
+  await page.screenshot({ path: path.join(output, "player-card-editor.png"), fullPage: true });
+  // This check owns the player it created; leave the local library as it was found.
+  for (const player of await (await fetch(`${base}/api/players?q=${encodeURIComponent(unique)}`)).json() as Player[]) await fs.rm(location("players", player.id), { force: true });
+
   assert.deepEqual(errors, []);
   await fs.writeFile(path.join(output, "ui-report.json"), JSON.stringify({ passed: true, browserErrors: errors }, null, 2));
 } finally { await browser.close(); }

@@ -1,0 +1,7 @@
+interface:
+  display_name: "Investor Deck Advisor"
+  short_description: "VC-style pitch screening and revision"
+  brand_color: "#15E6FF"
+  default_prompt: "Use $investor-deck-advisor to screen this pitch deck, identify the evidence gaps, and recommend the highest-impact revisions."
+policy:
+  allow_implicit_invocation: true

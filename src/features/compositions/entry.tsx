@@ -29,6 +29,8 @@ window.drawFrame = async ({ time, pageIndex = current.pageIndex ?? 0, guides = f
     if (Math.abs(video.currentTime - target) > .001 || video.readyState < 2) await new Promise<void>((resolve, reject) => { video.addEventListener("seeked", () => resolve(), { once: true }); video.addEventListener("error", () => reject(new Error("Video seek failed")), { once: true }); video.currentTime = target; });
     video.pause();
   }));
+  // Let the browser commit this deterministic frame before capture or display.
+  await new Promise<void>(resolve => requestAnimationFrame(() => resolve()));
 };
 let active = false;
 let pending: { time: number; pageIndex?: number; guides?: boolean; requestId?: number } | null = null;

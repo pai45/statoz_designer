@@ -32,13 +32,14 @@ try {
   await page.getByRole("button", { name: "Templates", exact: true }).click();
   await page.getByRole("button", { name: "Use Feature spotlight template" }).click();
   await page.getByRole("button", { name: "Create design", exact: true }).click();
+  await page.getByRole("button", { name: "Content", exact: true }).click();
   await page.getByRole("textbox", { name: "Project name", exact: true }).fill("Studio launch · Verified image");
   await page.getByLabel("Headline", { exact: false }).fill("Made for\nthe moment.");
   await page.getByText("All changes saved locally", { exact: true }).waitFor();
   const projectId = new URL(page.url()).searchParams.get("project")!;
   let imageProject = await request<ProjectEnvelope>(`projects/${projectId}`);
   assert.equal(imageProject.project.pages[0].headline, "Made for\nthe moment.");
-  await page.reload(); await page.getByLabel("Headline", { exact: false }).waitFor();
+  await page.reload(); await page.getByRole("button", { name: "Content", exact: true }).click(); await page.getByLabel("Headline", { exact: false }).waitFor();
   assert.equal(await page.getByLabel("Headline", { exact: false }).inputValue(), "Made for\nthe moment.");
   await page.getByRole("button", { name: "Undo", exact: true }).isDisabled();
   await page.getByLabel("Headline", { exact: false }).fill("One new line.");

@@ -61,21 +61,6 @@ export function useEditor(initial: ProjectEnvelope) {
     } catch (e) { setError((e as Error).message); }
   }, [initial.project.id]);
   useEffect(() => {
-    const timer = setInterval(async () => {
-      if (savingRef.current) return;
-      try {
-        const current = await api<ProjectEnvelope>(`projects/${initial.project.id}`);
-        if (savingRef.current || current.etag === etagRef.current) return;
-        if (JSON.stringify(latest.current) !== savedRef.current) { setConflict(true); setError("This project changed outside the editor. Reload it or save your edits as a copy."); }
-        else {
-          latest.current = current.project; etagRef.current = current.etag; savedRef.current = JSON.stringify(current.project);
-          setProject(current.project); setEtag(current.etag); setSaved(savedRef.current); setError("");
-        }
-      } catch (e) { setError((e as Error).message); }
-    }, 3500);
-    return () => clearInterval(timer);
-  }, [initial.project.id]);
-  useEffect(() => {
     const guard = (e: BeforeUnloadEvent) => { if (dirty) { e.preventDefault(); e.returnValue = ""; } };
     window.addEventListener("beforeunload", guard); return () => window.removeEventListener("beforeunload", guard);
   }, [dirty]);

@@ -2,13 +2,22 @@ import fs from "node:fs/promises";
 import path from "node:path";
 import { randomUUID } from "node:crypto";
 import { durationOf, formats, type Format, type Project, type RenderJob } from "@/domain/project";
+import { appCreativeReadiness } from "@/domain/app-creatives";
+import { templateFor } from "@/features/templates/registry";
 import { compositionHtml } from "./composition-html";
 import { assetPath, atomicWrite, dataRoot, listAssets, location, readJob, StudioError, updateJob } from "./storage";
 
 export async function enqueue(project: Project, format: Format, outputType: RenderJob["outputType"]) {
   if (!formats[format]) throw new StudioError("Unknown output format.");
-  const allowed = project.kind === "video" ? ["mp4"] : project.kind === "carousel" ? ["zip"] : ["png", "jpeg"];
+  const allowed: RenderJob["outputType"][] = project.kind === "video" ? ["mp4"] : project.pitchDeck ? ["zip", "pdf", "pptx"] : project.kind === "carousel" ? ["zip"] : ["png", "jpeg"];
   if (!allowed.includes(outputType)) throw new StudioError("Output type does not match this project.");
+  if (project.pitchDeck && format !== "landscape") throw new StudioError("Pitch decks export in 16:9 landscape.");
+  const template = templateFor(project.templateId);
+  if (!template.formats.includes(format)) throw new StudioError("That output format is not supported by this template.");
+  if (project.templateId === "store-icon" && outputType !== "png") throw new StudioError("Store icons export as PNG files.");
+  const assets = await listAssets();
+  const readiness = appCreativeReadiness(project, format, assets);
+  if (readiness.length) throw new StudioError(readiness.join(" "));
   const snapshot = structuredClone(project); snapshot.format = format;
   const id = randomUUID();
   const folder = location("renders", id, "");
@@ -18,7 +27,7 @@ export async function enqueue(project: Project, format: Format, outputType: Rend
     await fs.writeFile(path.join(folder, "scene.html"), html);
     await atomicWrite(path.join(folder, "project.json"), snapshot);
     if (snapshot.audio.assetId && !snapshot.audio.silent) {
-      const asset = (await listAssets()).find(a => a.id === snapshot.audio.assetId);
+      const asset = assets.find(a => a.id === snapshot.audio.assetId);
       if (!asset || !asset.mime.startsWith("audio/")) throw new StudioError("Choose a valid audio asset.");
       await fs.copyFile(await assetPath(asset), path.join(folder, "audio" + path.extname(asset.file)));
     }
