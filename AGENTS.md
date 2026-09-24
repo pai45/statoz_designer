@@ -8,6 +8,12 @@ This is a local Next.js content studio. Read `docs/brand-guide.md`,
 
 - Preserve the StatOz brand snapshot: token-first color/type/spacing, continuous
   chamfer borders, Onest body text, Orbitron display type, restrained glow.
+- Use the `statoz-design-system` skill for any visual work (studio UI, compositions,
+  social, video, app store, pitch, off-studio pages). Its canonical copy is in
+  `.agents/skills`; `.claude/skills` holds a generated mirror for Claude Code. The
+  guide content lives in `src/domain/brand-guide.ts` and also drives the studio's
+  Brand tab and Assets › Design kit. After changing it, `tokens.css`, or the social
+  scale in `composition.css`, run `npm run design:sync`; `npm test` fails until you do.
 - Routes are thin; feature UI lives in `src/features`, generic controls in
   `src/design-system`, shared schemas in `src/domain`, and local I/O in `src/server`.
 - Templates must work in all four declared ratios and use deterministic frame
@@ -25,6 +31,16 @@ This is a local Next.js content studio. Read `docs/brand-guide.md`,
   dependency; the import copies records and portraits into storage. Imported players
   are real athletes: keep their provenance in `source`, leave portraits at `reference`
   approval, and never imply that any of them endorse StatOz.
+- `npm run import:app-screens` copies the curated screens in `src/domain/app-screens.ts`
+  from the same read-only checkout's screenshot catalog into storage as `reference`
+  product captures. Their prefilled App showcase copy describes the screen only; the
+  names, scores, and balances shown in them are illustrative product data.
+- `npm run capture:gameplay` drives the existing, unchanged card_game `build/web` in a
+  throwaway browser profile (`src/server/capture`) to reach live play in each game. It
+  never builds, writes, or edits card_game; only that browser's storage changes. Frames
+  register as `reference` captures, and the athletes, scores, and balances in them are
+  illustrative product data. Recipes use the app's semantics labels; update them when
+  the app's controls change, and report any game the script cannot reach.
 - Sample statistics are examples. Do not turn prototype product behavior into
   marketing promises or claim sponsorship/endorsement from repository assets.
 - Video briefs require a duration of 8–60 seconds. Render at 30 fps. Keep the
@@ -44,6 +60,9 @@ This is a local Next.js content studio. Read `docs/brand-guide.md`,
   preferred to an error. Posters carry reported figures only — never invent or project a
   number. Team crests import as `reference` with the ESPN URL as provenance; they are club
   trademarks, never brand assets, and must never imply endorsement.
+  The News flash template reads the same feed's league news: story photos import as
+  `reference` `news-photo` assets with the image, credit and story as provenance, the credit
+  prints on the artwork, and headlines are reported news, rewritten for length but never for meaning.
 - Assistant runs (`src/server/agent.ts`, `src/server/agents`) were requested by the user.
   They drive a locally installed Claude Code or Codex CLI, which signs in on its own, so
   the studio stores no API key and still runs with neither installed. Keep the bounds:
@@ -61,6 +80,7 @@ This is a local Next.js content studio. Read `docs/brand-guide.md`,
 `npm run test:publish` opens each site composer with recent exports, without posting.
 `npm run assistant` runs the assistant process alone; `npm run doctor` reports which CLIs it found.
 `npm run test:espn` checks the match adapters against the live feed, one league per sport.
+`npm run design:sync` regenerates the design-system skill references and its `.claude` mirror.
 
 See README.md for setup and troubleshooting.
 

@@ -1,5 +1,7 @@
 import { z } from "zod";
 
+export const maxPitchPages = 20;
+
 export const formats = {
   square: { label: "Square", ratio: "1:1", width: 1080, height: 1080 },
   portrait: { label: "Portrait feed", ratio: "4:5", width: 1080, height: 1350 },
@@ -24,10 +26,28 @@ export const sports = {
   motorsport: { label: "Motorsport", accent: "#f42d29", symbol: "05" },
 } as const;
 export type Sport = keyof typeof sports;
+/** Games the launch template can illustrate, each drawn from its in-match screen. */
+export const launchGames = {
+  "pitch-duel": { label: "Pitch Duel", sport: "football", tagline: "Tactical card game" },
+  "penalty-shootout": { label: "Penalty Shootout", sport: "football", tagline: "Sudden-death spot kicks" },
+  "football-chess": { label: "5v5 Football Chess", sport: "football", tagline: "Tactical squad duel" },
+  "final-over": { label: "Final Over", sport: "cricket", tagline: "Six-ball cricket chase" },
+  "hoop-duel": { label: "Hoop Duel", sport: "basketball", tagline: "Street 1-on-1 arcade hoops" },
+  "grand-prix-dash": { label: "Grand Prix Dash", sport: "motorsport", tagline: "One-lap arcade racer" },
+  "tennis-rally": { label: "Tennis Rally", sport: "tennis", tagline: "2D arcade sets" },
+  quiz: { label: "Sports Quiz", sport: "football", tagline: "Trivia gauntlet" },
+  "football-bingo": { label: "Football Bingo", sport: "football", tagline: "Country x club grid" },
+  "guess-player": { label: "Guess the Player", sport: "football", tagline: "Daily mystery" },
+  "guess-driver": { label: "Guess the Driver", sport: "motorsport", tagline: "Daily F1 mystery" },
+  "guess-winner": { label: "Guess the Winner", sport: "tennis", tagline: "Daily mystery" },
+} as const satisfies Record<string, { label: string; sport: Sport; tagline: string }>;
+export type LaunchGame = keyof typeof launchGames;
+const launchGameIds = Object.keys(launchGames) as [LaunchGame, ...LaunchGame[]];
 const id = z.string().regex(/^[a-zA-Z0-9_-]{1,100}$/);
 const text = z.string().max(300);
+const hex = z.string().regex(/^#[0-9a-fA-F]{6}$/);
 const presentationSchema = z.object({
-  layout: z.enum(["cover", "statement", "device", "loop", "comparison", "convergence", "timeline", "seasonality", "traction", "closing"]),
+  layout: z.enum(["cover", "cover-frame", "statement", "problem-map", "device", "loop", "comparison", "convergence", "solution-stack", "market", "funds", "invite", "showcase", "team", "timeline", "seasonality", "traction", "closing"]),
   visual: z.enum(["none", "app-screen", "sports-hub", "trending-games", "predict-pick", "pitch-duel", "deck-locker", "leaderboard", "game-library", "storefront"]),
   bullets: z.array(z.string().max(300)).max(6),
   metrics: z.array(z.object({ label: z.string().max(80), value: z.string().max(80), detail: z.string().max(300) })).max(6),
@@ -52,6 +72,25 @@ export const pageSchema = z.object({
   assetId: id.or(z.literal("")), tabletAssetId: id.or(z.literal("")).default(""), crop: z.enum(["cover", "contain"]),
   /** Team crests drawn by the match and comparison visuals, in place of initials. */
   emblemA: id.or(z.literal("")).default(""), emblemB: id.or(z.literal("")).default(""),
+  /** The launch template draws this game's gameplay art when no media overrides it. */
+  game: z.enum(launchGameIds).or(z.literal("")).default(""),
+  /** Match-story beat this scene plays. "" follows scene order: score, stats, graph, then pick last. */
+  beat: z.enum(["", "score", "stats", "graph", "pick"]).default(""),
+  /** Stats both sides have, as reported, compared row by row in the stats beat. */
+  matchStats: z.array(z.object({ label: z.string().max(40), a: z.string().max(20), b: z.string().max(20) })).max(6).default([]),
+  /** Who the score beat reveals as the winner. "" reads it from the scoreline; "none" is a draw or no result. */
+  winner: z.enum(["", "A", "B", "none"]).default(""),
+  /** Team colours for side A and B. "" falls back to the sport accent. */
+  colorA: hex.or(z.literal("")).default(""), colorB: hex.or(z.literal("")).default(""),
+  /** Graph beat: "auto" picks the sport's own chart. Series are entered by hand, never projected. */
+  graph: z.enum(["auto", "momentum", "race", "lead", "position"]).default("auto"),
+  seriesA: z.array(z.number().min(0).max(999)).max(60).default([]), seriesB: z.array(z.number().min(0).max(999)).max(60).default([]),
+  /** Goals, wickets or lead changes, placed at a point index of their side's series. */
+  markers: z.array(z.object({ at: z.number().int().min(0).max(59), side: z.enum(["A", "B"]), label: z.string().max(12) })).max(20).default([]),
+  /** Pick beat crowd share for side A (B is the rest). Hand-entered; null hides the bars. */
+  pickShare: z.number().min(0).max(100).nullable().default(null), pickVotes: z.string().max(20).default(""),
+  /** News flash photo and story credit, printed on the artwork. "" hides the line. */
+  credit: z.string().max(200).default(""),
   cropX: z.number().min(0).max(100), cropY: z.number().min(0).max(100),
   clipStart: z.number().min(0).max(36000), clipEnd: z.number().min(0).max(36000),
   duration: z.number().min(0.5).max(60),
@@ -65,12 +104,14 @@ export const projectSchema = z.object({
   kind: z.enum(["image", "carousel", "video"]), sport: z.enum(["football", "cricket", "basketball", "tennis", "motorsport"]),
   format: z.enum(["square", "portrait", "reel", "landscape", "instagramPortrait", "playPhonePortrait", "appStoreIphone69", "playTabletLandscape", "appStoreIpad13", "playFeatureGraphic", "playIcon", "appStoreIcon"]),
   outputVariants: z.array(z.enum(["square", "portrait", "reel", "landscape", "instagramPortrait", "playPhonePortrait", "appStoreIphone69", "playTabletLandscape", "appStoreIpad13", "playFeatureGraphic", "playIcon", "appStoreIcon"])).min(1).max(8),
-  pages: z.array(pageSchema).min(1).max(12),
+  pages: z.array(pageSchema).min(1).max(maxPitchPages),
   pitchDeck: pitchDeckSchema.nullable().default(null),
   audio: z.object({ assetId: id.or(z.literal("")), gain: z.number().min(0).max(1), silent: z.boolean(), sfx: z.boolean() }),
   brief: z.object({ objective: z.string().max(1500), audience: text }),
   sample: z.boolean(), archived: z.boolean(), createdAt: z.string(), updatedAt: z.string(),
 }).superRefine((p, ctx) => {
+  if (p.pages.length > 12 && !(p.templateId === "investor-pitch" && p.pitchDeck && p.kind === "carousel"))
+    ctx.addIssue({ code: "custom", message: "Non-pitch projects support up to 12 pages.", path: ["pages"] });
   const seconds = p.pages.reduce((sum, page) => sum + page.duration, 0);
   if (p.kind === "video" && (seconds < 8 || seconds > 60 || Math.abs(seconds * 30 - Math.round(seconds * 30)) > .001))
     ctx.addIssue({ code: "custom", message: "Video duration must be 8–60 seconds and align to 30 fps.", path: ["pages"] });
@@ -91,11 +132,12 @@ export type Scene = z.infer<typeof pageSchema>;
 export type Project = z.infer<typeof projectSchema>;
 export type PresentationSlide = NonNullable<Scene["presentation"]>;
 export type PitchDeckMeta = NonNullable<Project["pitchDeck"]>;
+export type AssetCategory = "uploads" | "product-capture" | "player-portrait" | "team-crest" | "news-photo" | "line-art" | "audio-video" | "brand-artwork";
 export type Asset = {
   schemaVersion: 1; id: string; name: string; file: string; mime: string; bytes: number;
   width?: number; height?: number; duration?: number; hasAlpha?: boolean;
   /** Line art is browsed and picked separately from photography and footage. */
-  category?: "line-art"; sport?: Sport;
+  category?: AssetCategory; sport?: Sport;
   source: string; approval: "brand" | "reference" | "approved"; createdAt: string;
 };
 export const isLineArt = (asset?: Asset) => asset?.category === "line-art";

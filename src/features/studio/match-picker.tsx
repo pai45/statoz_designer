@@ -10,13 +10,24 @@ import "./match-picker.css";
 const stamp = (d: Date) => d.toISOString().slice(0, 10).replace(/-/g, "");
 const toInput = (yyyymmdd: string) => `${yyyymmdd.slice(0, 4)}-${yyyymmdd.slice(4, 6)}-${yyyymmdd.slice(6, 8)}`;
 const sportLabels = Object.entries(espnSports).map(([id, s]) => ({ id: id as EspnSport, label: s.label }));
+const graphNames = { momentum: "Match momentum", lead: "Scoring run", race: "Run worm" } as const;
+
+/** The beats a match story will play for this match: a beat with no data is left out rather than exported empty. */
+function storyBeats(facts: MatchFacts) {
+  const stats = facts.sport === "motorsport" ? facts.classification?.length ? "Classification" : "" : facts.stats.length ? "Key stats" : "";
+  const graph = facts.timeline ? graphNames[facts.timeline.graph] : "";
+  const missing = [!stats && "stats", !graph && "graph"].filter(Boolean).join(" and ");
+  return { beats: ["Result", stats, graph, "Pick your side"].filter(Boolean), missing };
+}
 
 /**
- * Picks a finished fixture from ESPN and turns it into a poster. Used two ways: from
- * Projects it creates a project, and from the editor it refills the open scene.
+ * Picks a finished fixture from ESPN and turns it into a poster or a match story. Used two
+ * ways: from Projects it creates a project, and from the editor it refills the open one.
  */
-export function MatchPicker({ mode, projectId, pageIndex, onDone, onClose, notify }: {
+export function MatchPicker({ mode, story = false, projectId, pageIndex, onDone, onClose, notify }: {
   mode: "create" | "fill";
+  /** Filling a match story, which takes the whole match rather than one featured stat. */
+  story?: boolean;
   projectId?: string; pageIndex?: number;
   onDone: (project: ProjectEnvelope["project"]) => void;
   onClose: () => void;
@@ -31,6 +42,7 @@ export function MatchPicker({ mode, projectId, pageIndex, onDone, onClose, notif
   const [loading, setLoading] = useState(false), [error, setError] = useState("");
   const [facts, setFacts] = useState<MatchFacts | null>(null), [statLabel, setStatLabel] = useState("");
   const [format, setFormat] = useState<Format>("portrait");
+  const [output, setOutput] = useState<"poster" | "story">("poster"), [duration, setDuration] = useState(15);
   const [crests, setCrests] = useState(true);
   const [busy, setBusy] = useState(false);
 
@@ -62,10 +74,10 @@ export function MatchPicker({ mode, projectId, pageIndex, onDone, onClose, notif
       const body = {
         leagueId: activeLeague, eventId: facts.eventId, date, crests,
         ...(statLabel ? { statLabel } : {}),
-        ...(mode === "fill" ? { projectId, pageIndex: pageIndex ?? 0 } : { format }),
+        ...(mode === "fill" ? { projectId, pageIndex: pageIndex ?? 0 } : { format, ...(output === "story" ? { templateId: "match-story", duration } : {}) }),
       };
       const result = await api<{ project: ProjectEnvelope["project"] }>("espn/poster", { method: "POST", body: JSON.stringify(body) });
-      notify(mode === "fill" ? "Scene filled from the match." : "Poster created from the match.");
+      notify(mode === "fill" ? (story ? "Match story filled from the match." : "Scene filled from the match.") : output === "story" ? "Match story created from the match." : "Poster created from the match.");
       onDone(result.project);
     } catch (e) { notify((e as Error).message); }
     finally { setBusy(false); }
@@ -77,7 +89,7 @@ export function MatchPicker({ mode, projectId, pageIndex, onDone, onClose, notif
     <div className="modal-heading">
       <div>
         <span className="section-caption">MATCH DATA FROM ESPN</span>
-        <h2>{mode === "fill" ? "Fill this scene from a match" : "Build a poster from a match"}</h2>
+        <h2>{mode === "fill" ? story ? "Fill this story from a match" : "Fill this scene from a match" : "Build from a match"}</h2>
       </div>
       <Button variant="ghost" aria-label="Close match picker" onClick={onClose}><Icon name="close"/></Button>
     </div>
@@ -116,7 +128,13 @@ export function MatchPicker({ mode, projectId, pageIndex, onDone, onClose, notif
         <div><h3>{facts.name}</h3><p>{facts.note || facts.detail}{facts.venue ? ` · ${facts.venue}` : ""}</p></div>
         <Tag>{facts.leagueName}</Tag>
       </div>
-      {facts.stats.length > 0 ? <label className="field"><span>Feature this stat</span>
+      {(story || (mode === "create" && output === "story")) ? (() => {
+        const { beats, missing } = storyBeats(facts);
+        return <div className="story-beats"><span className="section-caption">THE STORY WILL PLAY</span>
+          <ol>{beats.map(beat => <li key={beat}>{beat}</li>)}</ol>
+          {missing && <p className="muted-note">ESPN has no {missing} data for this match, so {missing.includes("and") ? "those beats are" : "that beat is"} left out and the others share the running time.</p>}
+        </div>;
+      })() : facts.stats.length > 0 ? <label className="field"><span>Feature this stat</span>
         <select value={statLabel} onChange={e => setStatLabel(e.target.value)}>
           <option value="">Best available ({facts.stats[0].label})</option>
           {facts.stats.map(s => <option key={s.label} value={s.label}>{s.label} · {s.a} — {s.b}</option>)}
@@ -124,16 +142,24 @@ export function MatchPicker({ mode, projectId, pageIndex, onDone, onClose, notif
       </label> : <p className="muted-note">This sport reports no comparable team stat, so the poster leads with the result.</p>}
       {!!facts.highlights.length && <div className="fact-chips">{facts.highlights.map(h => <span key={h.label}><i>{h.label}</i>{h.value}</span>)}</div>}
       <label className="toggle-row"><span>Import team crests as assets</span><input type="checkbox" checked={crests} onChange={e => setCrests(e.target.checked)}/></label>
-      {mode === "create" && <label className="field"><span>Format</span>
-        <select value={format} onChange={e => setFormat(e.target.value as Format)}>{standardFormats.map(id => <option key={id} value={id}>{formats[id].label} · {formats[id].ratio}</option>)}</select>
-      </label>}
+      {mode === "create" && <div className="match-output">
+        <label className="field"><span>Make</span>
+          <select value={output} onChange={e => setOutput(e.target.value as "poster" | "story")}><option value="poster">Match poster</option><option value="story">Match story video</option></select>
+        </label>
+        <label className="field"><span>Format</span>
+          <select value={format} onChange={e => setFormat(e.target.value as Format)}>{standardFormats.map(id => <option key={id} value={id}>{formats[id].label} · {formats[id].ratio}</option>)}</select>
+        </label>
+        {output === "story" && <label className="field"><span>Length</span>
+          <select value={duration} onChange={e => setDuration(Number(e.target.value))}>{[10, 12, 15, 20, 30].map(n => <option key={n} value={n}>{n} seconds</option>)}</select>
+        </label>}
+      </div>}
       <p className="muted-note">Figures are reported by ESPN. Crests are club trademarks, imported as product reference — they do not imply endorsement.</p>
     </div>}
 
     <div className="modal-footer">
       <Button variant="secondary" onClick={onClose}>Cancel</Button>
       <Button disabled={!facts || busy} onClick={() => void build()}>
-        <Icon name="spark" size={16}/>{busy ? "Working…" : mode === "fill" ? "Fill this scene" : "Create poster"}
+        <Icon name="spark" size={16}/>{busy ? "Working…" : mode === "fill" ? story ? "Fill this story" : "Fill this scene" : output === "story" ? "Create story" : "Create poster"}
       </Button>
     </div>
   </dialog>;

@@ -1,4 +1,6 @@
 import { tabletShowcaseFormats } from "@/domain/app-creatives";
+import { appScreenTheme } from "@/domain/app-screens";
+import { ShowcaseThemeBackdrop } from "./app-showcase-backdrops";
 import type { Format, Scene } from "@/domain/project";
 
 type Media = Record<string, { src: string; mime: string }>;
@@ -18,9 +20,10 @@ function Capture({ scene, format, media }: { scene: Scene; format: Format; media
 }
 
 function Showcase({ scene, index, total, format, media, logo }: { scene: Scene; index: number; total: number; format: Format; media: Media; logo: string }) {
-  const tablet = tabletShowcaseFormats.has(format);
-  return <div className={`app-showcase ${tablet ? "is-tablet-layout" : "is-phone-layout"}`}>
+  const tablet = tabletShowcaseFormats.has(format), theme = appScreenTheme(scene.assetId);
+  return <div className={`app-showcase ${tablet ? "is-tablet-layout" : "is-phone-layout"}${theme ? ` theme-${theme}` : ""}`}>
     <div className="app-creative-grid"/>
+    {theme && <ShowcaseThemeBackdrop theme={theme} tall={format === "playPhonePortrait" || format === "appStoreIphone69"}/>}
     <header className="app-showcase-header"><Brand logo={logo}/><span>{String(index + 1).padStart(2, "0")} / {String(total).padStart(2, "0")}</span></header>
     <section className="app-showcase-copy" data-safe>
       <div className="app-showcase-kicker"><i/>{scene.eyebrow}</div>

@@ -1,4 +1,11 @@
 import type { Scene } from "@/domain/project";
+import { SolutionStack } from "./solution-stack";
+import { MarketBubbles, MarketHighlight } from "./market-scale";
+import { FundsSplit, FundsTerms } from "./use-of-funds";
+import { InviteArc, InviteLines } from "./invite";
+import { ShowcaseBackdrop, ShowcaseTags } from "./showcase";
+import { TeamBackdrop, TeamCards } from "./team";
+import { RoadmapTrack } from "./roadmap";
 
 function MiniHeader({ section }: { section: string }) {
   return <><div className="product-status"><b>09:41</b><span>STATOZ</span><i>● ● ●</i></div><div className="product-nav"><strong>{section}</strong><span>SHOP</span><span>TOP</span><span>PROFILE</span></div></>;
@@ -118,28 +125,32 @@ const tractionMonths = ["APR", "MAY", "JUN", "JUL", "AUG", "SEP"];
 function TractionProof({ values, metrics }: { values: number[]; metrics: NonNullable<Scene["presentation"]>["metrics"] }) {
   const points = values.slice(0, tractionMonths.length).map((value, index, all) => {
     const x = 24 + (index * 952) / Math.max(1, all.length - 1);
-    const y = 112 - (Math.max(0, Math.min(100, value)) / 100) * 82;
+    const y = 134 - (Math.max(0, Math.min(100, value)) / 100) * 98;
     return { x, y };
   });
   const linePoints = points.map(point => `${point.x},${point.y}`).join(" ");
-  const areaPoints = points.length > 0 ? `24,118 ${linePoints} 976,118` : "";
+  const areaPoints = points.length > 0 ? `24,142 ${linePoints} 976,142` : "";
   return <section className="pitch-traction" aria-label="Founder-supplied product traction from April to September 2026">
     <div className="traction-metrics">{metrics.slice(0, 3).map((metric, metricIndex) => <div className={metricIndex === 0 ? "traction-metric is-primary" : "traction-metric"} key={metric.label}>
-      <small>{String(metricIndex + 1).padStart(2, "0")}</small><strong>{metric.value}</strong><span>{metric.label}</span><em>{metric.detail}</em>
+      {/* The shell is the outline and the panel sits inside it, so the border follows every cut corner. */}
+      <div className="traction-metric-panel">
+        <strong>{metric.value}</strong><span>{metric.label}</span><em>{metric.detail}</em>
+      </div>
+      <small>{String(metricIndex + 1).padStart(2, "0")}</small>
     </div>)}</div>
-    <div className="traction-chart">
+    <div className="traction-chart"><div className="traction-chart-panel">
       <div className="traction-chart-label"><span>CUMULATIVE DOWNLOADS</span><b>APR-SEP 2026</b></div>
-      <svg viewBox="0 0 1000 128" role="img" aria-label="Downloads increased from zero in April to sixteen thousand in September">
+      <svg viewBox="0 0 1000 154" role="img" aria-label="Downloads increased from zero in April to sixteen thousand in September">
         <defs><linearGradient id="tractionArea" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stopColor="#15e6ff" stopOpacity=".24"/><stop offset="1" stopColor="#15e6ff" stopOpacity="0"/></linearGradient></defs>
-        {points.map((point, index) => <line className="traction-grid-line" x1={point.x} x2={point.x} y1="14" y2="118" key={tractionMonths[index]}/>) }
+        {points.map((point, index) => <line className="traction-grid-line" x1={point.x} x2={point.x} y1="16" y2="142" key={tractionMonths[index]}/>) }
         <polyline className="traction-area" points={areaPoints}/>
         <polyline className="traction-line" points={linePoints}/>
         {points.map((point, index) => <circle className={index === points.length - 1 ? "traction-point is-final" : "traction-point"} cx={point.x} cy={point.y} r={index === points.length - 1 ? 7 : 4} key={`point-${index}`}/>) }
-        <text className="traction-start-value" x="24" y="106">0</text>
-        <text className="traction-end-value" x="976" y="18" textAnchor="end">16K</text>
+        <text className="traction-start-value" x="24" y="128">0</text>
+        <text className="traction-end-value" x="976" y="22" textAnchor="end">16K</text>
       </svg>
       <div className="traction-months">{tractionMonths.map(month => <span key={month}>{month}</span>)}</div>
-    </div>
+    </div></div>
   </section>;
 }
 
@@ -160,7 +171,7 @@ function pitchItem(item = "") {
   return { label, detail: detail.join(" / ") };
 }
 
-function ConvergenceDiagram({ bullets }: { bullets: string[] }) {
+function ConvergenceDiagram({ bullets, logo }: { bullets: string[]; logo: string }) {
   const sources = Array.from({ length: 3 }, (_, itemIndex) => pitchItem(bullets[itemIndex]));
   const destination = pitchItem(bullets[3]);
   const progression = pitchItem(bullets[4]);
@@ -178,6 +189,7 @@ function ConvergenceDiagram({ bullets }: { bullets: string[] }) {
         <span>UNIFIED F2P SYSTEM</span>
         <strong>{destination.label}</strong>
         <small>{destination.detail}</small>
+        <img className="convergence-mark" src={logo} alt="" aria-hidden="true"/>
       </div></div>
       <div className="convergence-progression">
         <span><small>SHARED LAYER</small><strong>{progression.label}</strong></span>
@@ -187,32 +199,80 @@ function ConvergenceDiagram({ bullets }: { bullets: string[] }) {
   </section>;
 }
 
+/** Nested chamfered slabs tilted up to the right; drawn behind the cover copy on a 1920 × 1080 board. */
+function CoverFrame() {
+  const plate = (x: number, y: number, w: number, h: number, cut: number) => `M${x + cut} ${y}H${x + w}V${y + h - cut}L${x + w - cut} ${y + h}H${x}V${y + cut}Z`;
+  return <svg className="cover-frame-art" viewBox="0 0 1920 1080" preserveAspectRatio="xMidYMid slice" aria-hidden="true">
+    <defs>
+      <linearGradient id="coverSlab" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stopColor="#0d1f30"/><stop offset="1" stopColor="#07121e"/></linearGradient>
+      <pattern id="coverScan" width="8" height="8" patternUnits="userSpaceOnUse"><path d="M0 .5H8"/></pattern>
+    </defs>
+    <g transform="translate(0 300) skewY(-12)">
+      <path className="cover-frame-slab" d={plate(860, 0, 1200, 840, 56)}/>
+      <path className="cover-frame-outline" d={plate(1190, -100, 850, 880, 44)}/>
+      <path className="cover-frame-inner" d={plate(1260, 170, 760, 290, 32)}/>
+      <path className="cover-frame-scan" d={plate(1500, 200, 520, 230, 26)}/>
+      <path className="cover-frame-focus" d={plate(1500, 200, 520, 230, 26)}/>
+      <path className="cover-frame-tick" d="M1190 810V850H1230"/>
+    </g>
+  </svg>;
+}
+
 export function PitchDeckSlide({ scene, index, total, logo, visualSrc }: { scene: Scene; index: number; total: number; logo: string; visualSrc?: string }) {
   const slide = scene.presentation!;
-  const isCover = slide.layout === "cover";
+  const isInvite = slide.layout === "invite";
+  const isShowcase = slide.layout === "showcase";
+  const isTeam = slide.layout === "team";
+  const isTimeline = slide.layout === "timeline";
+  const isCover = slide.layout === "cover" || slide.layout === "cover-frame" || isInvite;
   const isSeasonality = slide.layout === "seasonality";
   const isConvergence = slide.layout === "convergence";
   const isOpenReturnLoop = slide.layout === "loop";
   const isTraction = slide.layout === "traction";
+  const isSolutionStack = slide.layout === "solution-stack";
+  const isMarket = slide.layout === "market";
+  const isFunds = slide.layout === "funds";
+  const isProblemMap = slide.layout === "problem-map";
   return <div className={`pitch-slide pitch-layout-${slide.layout}`}>
     {slide.visual === "none" && visualSrc && <div className="pitch-slide-background" aria-hidden="true"><img src={visualSrc} alt=""/><i/></div>}
     <div className="pitch-slide-grid"/>
+    {slide.layout === "cover-frame" && <CoverFrame/>}
+    {isInvite && <InviteArc/>}
+    {slide.layout === "cover-frame" && <div className="cover-frame-lockup" aria-label="StatOz"><img src={logo} alt=""/><span>StatOz</span></div>}
     <header className="pitch-slide-header"><div className="pitch-brand"><img src={logo} alt=""/><span>StatOz</span></div><div><span>{scene.eyebrow}</span><b>{String(index + 1).padStart(2, "0")} / {String(total).padStart(2, "0")}</b></div></header>
     <main className="pitch-slide-main">
+      {isShowcase && <ShowcaseBackdrop/>}
+      {isTeam && <TeamBackdrop/>}
+      {isMarket && <MarketBubbles metrics={slide.metrics} bullets={slide.bullets}/>}
       <section className="pitch-slide-copy">
         {!isCover && !isSeasonality && <div className={`pitch-evidence evidence-${slide.evidenceStatus}`}><i/>{evidenceLabels[slide.evidenceStatus]}</div>}
+        {isInvite && <div className="invite-lockup"><img src={logo} alt=""/><span>StatOz</span></div>}
         <h1 data-overflow>{scene.headline}</h1>
         <p data-overflow>{scene.body}</p>
         {isSeasonality && <SeasonCalendar/>}
-        {isConvergence && <ConvergenceDiagram bullets={slide.bullets}/>} 
+        {isConvergence && (
+          <ConvergenceDiagram bullets={slide.bullets} logo={logo}/>
+        )}
         {isTraction && <TractionProof values={scene.chartValues} metrics={slide.metrics}/>} 
         {!isSeasonality && isOpenReturnLoop && <OpenToReturnLoop bullets={slide.bullets}/>} 
-        {!isSeasonality && !isConvergence && !isOpenReturnLoop && !isTraction && slide.bullets.length > 0 && <div className={`pitch-bullets ${slide.layout === "loop" ? "pitch-loop" : ""}`}>{slide.bullets.map((item, itemIndex) => {
+        {!isSeasonality && !isConvergence && !isOpenReturnLoop && !isTraction && !isSolutionStack && !isMarket && !isFunds && !isInvite && !isShowcase && !isTeam && !isProblemMap && !isTimeline && slide.bullets.length > 0 && <div className={`pitch-bullets ${slide.layout === "loop" ? "pitch-loop" : ""}`}>{slide.bullets.map((item, itemIndex) => {
           const [label, detail] = item.split(" / ");
           return <div key={itemIndex}><b>{String(itemIndex + 1).padStart(2, "0")}</b><span><strong>{label}</strong>{detail && <small>{detail}</small>}</span></div>;
         })}</div>}
-        {!isSeasonality && !isTraction && slide.metrics.length > 0 && <div className="pitch-metrics">{slide.metrics.map((metric, metricIndex) => <div key={metricIndex}><strong>{metric.value}</strong><span>{metric.label}</span><small>{metric.detail}</small></div>)}</div>}
+        {isMarket && <MarketHighlight metric={slide.metrics[3]}/>}
+        {isFunds && <FundsTerms metrics={slide.metrics.slice(2)}/>}
+        {isInvite && <InviteLines bullets={slide.bullets}/>}
+        {!isSeasonality && !isTraction && !isMarket && !isFunds && !isInvite && !isShowcase && !isTeam && slide.metrics.length > 0 && <div className="pitch-metrics">{slide.metrics.map((metric, metricIndex) => <div key={metricIndex}><strong>{metric.value}</strong><span>{metric.label}</span><small>{metric.detail}</small></div>)}</div>}
       </section>
+      {isProblemMap && <section className="pitch-problem-map" aria-label="Sports fan pain points">{slide.bullets.filter(item => item.trim()).map((item, itemIndex) => {
+        const { label, detail } = pitchItem(item);
+        return <article className="problem-plate" key={itemIndex}><div className="problem-plate-inner"><b className="problem-marker">{String(itemIndex + 1).padStart(2, "0")}</b><div><h2 data-overflow>{label}</h2>{detail && <p data-overflow>{detail}</p>}</div></div></article>;
+      })}</section>}
+      {isSolutionStack && <SolutionStack bullets={slide.bullets}/>}
+      {isFunds && <FundsSplit metrics={slide.metrics}/>}
+      {isShowcase && <ShowcaseTags bullets={slide.bullets}/>}
+      {isTeam && <TeamCards bullets={slide.bullets}/>}
+      {isTimeline && <RoadmapTrack bullets={slide.bullets}/>}
       {slide.visual !== "none" && <section className="pitch-product-visual" aria-label={`${slide.visual} product view`}><ProductVisual visual={slide.visual} src={visualSrc}/></section>}
     </main>
     <footer className="pitch-slide-footer"><span>{slide.sourceNote}</span><b>{isCover ? "CONFIDENTIAL / WORKING DRAFT" : evidenceLabels[slide.evidenceStatus]}</b></footer>

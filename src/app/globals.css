@@ -1,5 +1,7 @@
 @import "tailwindcss";
 @import "../design-system/styles/tokens.css";
+@import "../design-system/components/actions.css";
+@import "../design-system/components/elements.css";
 @import "../features/compositions/composition.css";
 @import "../features/compositions/app-creatives.css";
 @theme inline{--color-background:var(--ds-color-background-primary);--color-foreground:var(--ds-color-text-default);--color-accent:var(--ds-color-accent-cyan);--font-sans:var(--ds-font-body);--font-display:var(--ds-font-display)}
@@ -29,3 +31,4 @@
 .overline{text-decoration:none}
 @media(max-width:700px){.pitch-library-toolbar{align-items:flex-start;gap:12px;flex-direction:column}.pitch-family-heading{padding:18px}.pitch-deck-card,.pitch-deck-card.variant{display:block}.pitch-deck-cover{width:100%;height:180px}.pitch-deck-info{padding:18px}.pitch-deck-actions{width:100%}.pitch-deck-actions .button{flex:1}.pitch-variant-modal{max-width:calc(100vw - 24px)}}
 .button-danger{background:color-mix(in srgb,var(--ds-color-danger) 18%,#101824);border-color:color-mix(in srgb,var(--ds-color-danger) 65%,transparent);color:#ffd5d5}.button-danger:hover:not(:disabled){background:color-mix(in srgb,var(--ds-color-danger) 30%,#101824);border-color:var(--ds-color-danger)}.danger-action:hover:not(:disabled){color:var(--ds-color-danger)!important}.delete-project-modal{border-color:color-mix(in srgb,var(--ds-color-danger) 55%,var(--studio-line))}.delete-project-warning{display:flex;gap:14px;align-items:flex-start;padding:17px;border:1px solid color-mix(in srgb,var(--ds-color-danger) 38%,var(--studio-line));background:color-mix(in srgb,var(--ds-color-danger) 7%,#101824);margin:22px 0}.delete-project-warning>svg{color:var(--ds-color-danger);margin-top:2px}.delete-project-warning strong{display:block;font-size:13px}.delete-project-warning p{color:#adbac9;font-size:10px;line-height:1.7;margin-top:7px}
+.library-primary-tabs{padding-bottom:16px;margin-bottom:20px;border-bottom:1px solid var(--studio-line)}.library-section{min-width:0}.asset-labels{display:flex;align-items:center;gap:8px;flex-wrap:wrap}.asset-info .asset-labels select{width:auto;min-width:145px;flex:1}.asset-labels .tag{min-height:29px}.library-empty{margin-top:0}.library-empty>svg{color:var(--studio-accent)}.library-empty h2{margin-top:14px}.library-empty p{margin-top:8px;color:var(--studio-dim);font-size:11px}.brand-system>.brand-showcase:only-child{margin-bottom:0}

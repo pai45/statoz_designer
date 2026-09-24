@@ -1,5 +1,12 @@
 # Brand guide
 
+The full design system (every token, the type scales, shapes, action buttons and
+UI elements ported from statoz_web and card_game, safe areas, motion,
+use-case recipes, and do/don't) is in the studio under **Assets & brand → Brand**.
+Assistants get the same content from the `statoz-design-system` skill. Both come from
+`src/domain/brand-guide.ts` plus the stylesheets. To use the brand outside the studio,
+download the tokens, fonts, logo and guide from **Assets → Design kit**.
+
 ## Source of truth
 
 The versioned local snapshot from `statoz_web` provides CSS and TypeScript tokens,

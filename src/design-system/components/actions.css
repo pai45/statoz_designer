@@ -1,0 +1,167 @@
+/* The StatOz action family. Each chamfered action leaves the element itself
+   unclipped (so glow filters and focus survive) and paints two clipped layers:
+   ::before is the edge, ::after the fill inset inside it. */
+
+.action,.hero-cta,.fuse-cta,.pager-button,.action-chip,.icon-action,.stepper-button{--action-accent:var(--ds-color-accent-cyan);position:relative;isolation:isolate;border:0;background:transparent;cursor:pointer;-webkit-tap-highlight-color:transparent}
+.action::before,.action::after,.hero-cta::before,.hero-cta::after,.fuse-cta::before,.fuse-cta::after,.pager-button::before,.pager-button::after,.action-chip::before,.action-chip::after,.icon-action::before,.icon-action::after,.stepper-button::before,.stepper-button::after{content:"";position:absolute;z-index:-1;transition:background .15s,inset .15s,filter .15s}
+.action:disabled,.hero-cta:disabled,.fuse-cta:disabled,.pager-button:disabled,.action-chip:disabled,.icon-action:disabled,.stepper-button:disabled,.control-pad:disabled,.action[aria-disabled=true]{cursor:not-allowed;opacity:.55}
+.action:focus-visible,.hero-cta:focus-visible,.fuse-cta:focus-visible,.pager-button:focus-visible,.action-chip:focus-visible,.icon-action:focus-visible,.stepper-button:focus-visible{outline:none}
+
+/* ActionButton / ActionLink */
+.action{--action-edge:var(--action-accent);--action-fill:var(--action-accent);--action-ink:var(--ds-color-text-inverse);display:inline-flex;align-items:center;justify-content:center;gap:10px;height:44px;padding:0 16px;color:var(--action-ink);font:900 var(--ds-text-xs)/1 var(--ds-font-display);letter-spacing:var(--ds-tracking-label);text-decoration:none;white-space:nowrap;transition:transform .15s,filter .15s}
+.action::before{inset:0;clip-path:var(--ds-clip-field);background:var(--action-edge)}
+.action::after{inset:1px;clip-path:var(--ds-clip-field);background:var(--action-fill)}
+.action-sm{height:36px;padding:0 14px;gap:8px;font-size:var(--ds-text-2xs)}
+.action-lg{height:52px;padding:0 20px;gap:12px;font-size:var(--ds-text-sm)}
+.action.is-full{display:flex;width:100%}
+.action-tonal{--action-edge:color-mix(in srgb,var(--action-accent) 50%,transparent);--action-fill:color-mix(in srgb,var(--action-accent) 15%,var(--ds-color-background-secondary));--action-ink:var(--ds-color-text-default)}
+.action-surface{--action-edge:var(--ds-color-border-default);--action-fill:var(--ds-color-background-elevated);--action-ink:var(--ds-color-text-default)}
+.action-ghost{--action-edge:transparent;--action-fill:transparent;--action-ink:var(--action-accent)}
+.action:not(:disabled):hover{transform:translateY(-1px)}
+.action:not(:disabled):hover::after{filter:brightness(1.12)}
+.action:not(:disabled):active{transform:none}
+.action-ghost:not(:disabled):hover{--action-fill:color-mix(in srgb,var(--action-accent) 8%,transparent)}
+.action:focus-visible{--action-edge:var(--action-accent)}
+.action:focus-visible::after{inset:3px}
+.action-solid:focus-visible::before{background:var(--ds-color-text-default)}
+.action.is-glow{filter:drop-shadow(0 0 10px color-mix(in srgb,var(--action-accent) 50%,transparent))}
+.action.is-pending{cursor:progress}
+.action-label{min-width:0;overflow:hidden;text-overflow:ellipsis}
+.action-icon{display:grid;place-items:center;flex-shrink:0}
+.action-spinner{width:14px;height:14px;flex-shrink:0;border:2px solid currentColor;border-top-color:transparent;border-radius:50%;animation:action-spin .8s linear infinite}
+@keyframes action-spin{to{transform:rotate(1turn)}}
+
+/* HeroCta — card_game HudCtaButton / HudHoldCtaButton */
+.hero-cta{--hero-ink:var(--ds-color-text-inverse);display:flex;align-items:center;gap:14px;width:100%;height:64px;padding:0 18px;color:var(--hero-ink);text-align:center}
+.hero-cta::before{inset:0;clip-path:var(--ds-clip-hud);background:linear-gradient(135deg,rgb(255 255 255 / 85%),color-mix(in srgb,var(--action-accent) 70%,var(--ds-color-text-default)))}
+.hero-cta::after{inset:1.5px;clip-path:var(--ds-clip-hud);background:linear-gradient(to bottom,color-mix(in srgb,var(--action-accent) 66%,var(--ds-color-text-default)),var(--action-accent))}
+.hero-cta.is-outlined{--hero-ink:var(--action-accent)}
+.hero-cta.is-outlined::before{background:color-mix(in srgb,var(--action-accent) 70%,transparent)}
+.hero-cta.is-outlined::after{background:var(--ds-color-background-secondary)}
+.hero-cta:disabled{--hero-ink:var(--ds-color-text-muted);opacity:.58}
+.hero-cta:disabled::before{background:var(--ds-color-border-strong)}
+.hero-cta:disabled::after{background:linear-gradient(to bottom,var(--ds-color-background-secondary),var(--ds-color-background-elevated))}
+.hero-cta.is-glow{animation:hero-breathe 1.8s ease-in-out infinite alternate}
+.hero-cta.is-glow.is-pressed{animation:none;filter:drop-shadow(0 0 22px color-mix(in srgb,var(--action-accent) 75%,transparent))}
+.hero-cta:not(:disabled).is-pressed::after{filter:brightness(1.08)}
+.hero-cta:focus-visible::after{inset:3px}
+.hero-cta-icon{display:grid;place-items:center;flex-shrink:0}
+.hero-cta-divider{width:1.5px;height:42%;flex-shrink:0;background:color-mix(in srgb,currentColor 30%,transparent)}
+.hero-cta-text{flex:1;min-width:0;display:flex;flex-direction:column;align-items:center;gap:4px;padding-right:40px}
+.hero-cta-text strong{font:800 20px/1 var(--ds-font-display);letter-spacing:3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%}
+.hero-cta-text small{font:700 11px/1.1 var(--ds-font-body);letter-spacing:.8px;opacity:.75}
+@keyframes hero-breathe{from{filter:drop-shadow(0 0 10px color-mix(in srgb,var(--action-accent) 30%,transparent))}to{filter:drop-shadow(0 0 20px color-mix(in srgb,var(--action-accent) 60%,transparent))}}
+
+/* FuseCta — card_game CyberFuseCtaButton */
+.fuse-cta{display:flex;align-items:center;width:100%;height:68px;padding:0 16px 0 0;color:var(--ds-color-text-default);text-align:left;overflow:visible}
+.fuse-cta::before{inset:0;clip-path:var(--ds-clip-hud);background:color-mix(in srgb,var(--action-accent) 95%,var(--ds-color-text-default))}
+.fuse-cta::after{inset:1.5px;clip-path:var(--ds-clip-hud);background:color-mix(in srgb,var(--action-accent) 12%,var(--ds-color-background-secondary))}
+.fuse-cta.is-glow{filter:drop-shadow(0 0 12px color-mix(in srgb,var(--action-accent) 35%,transparent))}
+.fuse-cta:disabled::before{background:var(--ds-color-border-strong)}
+.fuse-cta:focus-visible::after{inset:3px}
+.fuse-cta-core{align-self:stretch;display:grid;place-items:center;width:78px;padding-right:14px;margin:1.5px 0 1.5px 1.5px;flex-shrink:0;color:var(--ds-color-text-inverse);background:var(--action-accent);clip-path:polygon(14px 0,100% 0,calc(100% - 14px) 100%,0 100%,0 14px);box-shadow:inset 0 2px 0 rgb(255 255 255 / 35%)}
+.fuse-cta:disabled .fuse-cta-core{background:var(--ds-color-border-strong)}
+.fuse-cta-text{flex:1;min-width:0;display:flex;flex-direction:column;gap:4px;padding-left:12px}
+.fuse-cta-text strong{font:900 17px/1 var(--ds-font-display);letter-spacing:1.4px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.fuse-cta-text small{font:800 9.5px/1.1 var(--ds-font-display);letter-spacing:1px;color:color-mix(in srgb,var(--action-accent) 70%,var(--ds-color-text-default))}
+.fuse-cta-chase{display:flex;flex-shrink:0;color:var(--action-accent)}
+.fuse-cta-chase svg{margin-left:-11px;opacity:.25;animation:fuse-chase 1.5s linear infinite}
+.fuse-cta-chase svg:nth-child(2){animation-delay:.5s}
+.fuse-cta-chase svg:nth-child(3){animation-delay:1s}
+.fuse-cta:disabled .fuse-cta-chase svg{animation:none;opacity:.4}
+.fuse-cta-fuse{position:absolute;left:90px;right:22px;bottom:9px;height:3px;background:color-mix(in srgb,var(--ds-color-background-primary) 70%,transparent)}
+.fuse-cta-fuse i{position:absolute;inset:0 auto 0 0;width:calc(var(--fuse) * 100%);background:var(--action-accent)}
+.fuse-cta-fuse i::after{content:"";position:absolute;right:-3px;top:-1.5px;width:6px;height:6px;background:color-mix(in srgb,var(--action-accent) 45%,var(--ds-color-text-default));box-shadow:0 0 8px var(--action-accent);animation:fuse-ember .6s ease-in-out infinite alternate}
+@keyframes fuse-chase{0%,100%{opacity:.25}33%{opacity:1}}
+@keyframes fuse-ember{to{filter:brightness(1.5)}}
+
+/* PagerButton — card_game HudPagerButton */
+.pager-button{display:inline-flex;align-items:center;justify-content:center;gap:8px;min-width:132px;height:56px;padding:0 22px;font:800 16px/1 var(--ds-font-body);letter-spacing:.8px}
+.pager-button::before{inset:0;clip-path:var(--ds-clip-hud)}
+.pager-button::after{inset:1.4px;clip-path:var(--ds-clip-hud)}
+.pager-button.is-focal{color:var(--ds-color-text-inverse);filter:drop-shadow(0 0 10px color-mix(in srgb,var(--action-accent) 50%,transparent))}
+.pager-button.is-focal::before{background:rgb(255 255 255 / 72%)}
+.pager-button.is-focal::after{background:linear-gradient(to bottom,color-mix(in srgb,var(--action-accent) 72%,var(--ds-color-text-default)),var(--action-accent))}
+.pager-button.is-calm{color:var(--action-accent)}
+.pager-button.is-calm::before{background:color-mix(in srgb,var(--action-accent) 45%,transparent)}
+.pager-button.is-calm::after{background:var(--ds-gradient-fixture-card)}
+.pager-button:disabled{color:var(--ds-color-text-muted);filter:none}
+.pager-button:disabled::before{background:color-mix(in srgb,var(--ds-color-border-strong) 45%,transparent)}
+.pager-button:disabled::after{background:var(--ds-color-fixture-base)}
+.pager-button:focus-visible::after{inset:3px}
+
+/* ActionChip — card_game CyberObjectiveAction */
+.action-chip{display:inline-flex;align-items:center;min-height:44px;padding:0;color:var(--action-accent)}
+.action-chip>span{position:relative;isolation:isolate;display:inline-flex;align-items:center;gap:6px;padding:8px 12px 8px 10px;font:800 10.5px/1 var(--ds-font-display);letter-spacing:.9px;white-space:nowrap}
+.action-chip::before,.action-chip::after{display:none}
+.action-chip>span::before,.action-chip>span::after{content:"";position:absolute;z-index:-1;clip-path:var(--ds-clip-compact-hud)}
+.action-chip>span::before{inset:0;background:color-mix(in srgb,var(--action-accent) 60%,transparent)}
+.action-chip>span::after{inset:1px;background:color-mix(in srgb,var(--action-accent) 8%,var(--ds-color-background-secondary))}
+.action-chip:not(:disabled):hover>span::after{background:color-mix(in srgb,var(--action-accent) 16%,var(--ds-color-background-secondary))}
+.action-chip:focus-visible>span::before{background:var(--action-accent)}
+.action-chip:disabled{color:var(--ds-color-text-muted)}
+
+/* IconButton */
+.icon-action{display:inline-grid;place-items:center;width:44px;height:44px;flex-shrink:0;color:var(--ds-color-text-muted)}
+.icon-action::before{inset:0;clip-path:var(--ds-clip-chip)}
+.icon-action::after{inset:1px;clip-path:var(--ds-clip-chip)}
+.icon-action-surface::before{background:var(--ds-color-border-default)}
+.icon-action-surface::after{background:var(--ds-color-background-elevated)}
+.icon-action-tonal{color:var(--action-accent)}
+.icon-action-tonal::before{background:color-mix(in srgb,var(--action-accent) 45%,transparent)}
+.icon-action-tonal::after{background:color-mix(in srgb,var(--action-accent) 12%,var(--ds-color-background-secondary))}
+.icon-action:not(:disabled):hover{color:var(--ds-color-text-default)}
+.icon-action-ghost:not(:disabled):hover::after{background:var(--ds-color-overlay-subtle)}
+.icon-action.is-on{color:var(--action-accent)}
+.icon-action.is-on::before{background:var(--action-accent)}
+.icon-action.is-on::after{background:color-mix(in srgb,var(--action-accent) 16%,var(--ds-color-background-secondary))}
+.icon-action:focus-visible::before{background:var(--action-accent)}
+.icon-action:focus-visible::after{inset:2px;background:var(--ds-color-background-secondary)}
+
+/* DialogActions — the confirm-dialog action bar in both products */
+.dialog-actions{--action-accent:var(--ds-color-accent-cyan);display:grid;grid-template-columns:1fr 1px 1fr;height:48px;border-top:1px solid var(--ds-color-border-subtle)}
+.dialog-actions>span{background:var(--ds-color-border-subtle)}
+.dialog-action{display:flex;align-items:center;justify-content:center;gap:6px;border:0;background:transparent;cursor:pointer;font:900 11px/1 var(--ds-font-display);letter-spacing:.2em;text-transform:uppercase}
+.dialog-action.is-cancel{color:var(--ds-color-text-muted)}
+.dialog-action.is-confirm{color:var(--action-accent)}
+.dialog-action:hover{background:var(--ds-color-overlay-subtle)}
+.dialog-action:focus-visible{outline:2px solid var(--action-accent);outline-offset:-2px}
+
+/* Stepper — statoz_web stake stepper */
+.stepper{--action-accent:var(--ds-color-accent-cyan);display:inline-flex;align-items:stretch;gap:6px;padding:4px;border:1px solid var(--ds-color-border-default);background:var(--ds-color-background-primary)}
+.stepper-button{display:grid;place-items:center;width:44px;min-height:44px;color:var(--action-accent)}
+.stepper-button::before{inset:0;clip-path:var(--ds-clip-chip);background:color-mix(in srgb,var(--action-accent) 40%,transparent)}
+.stepper-button::after{inset:1px;clip-path:var(--ds-clip-chip);background:color-mix(in srgb,var(--action-accent) 10%,var(--ds-color-background-secondary))}
+.stepper-button:disabled{color:var(--ds-color-text-disabled)}
+.stepper-button:disabled::before{background:var(--ds-color-border-subtle)}
+.stepper-button:focus-visible::before{background:var(--action-accent)}
+.stepper-value{display:flex;flex-direction:column;align-items:center;justify-content:center;min-width:96px;padding:0 10px}
+.stepper-value small{font:800 8px/1 var(--ds-font-display);letter-spacing:var(--ds-tracking-mega);color:var(--ds-color-text-muted);text-transform:uppercase}
+.stepper-value strong{margin-top:5px;font:800 20px/1 var(--ds-font-display);font-variant-numeric:tabular-nums;color:var(--ds-color-text-default)}
+.stepper-value em{font:600 11px var(--ds-font-body);font-style:normal;margin-left:4px;color:var(--ds-color-text-muted)}
+
+/* SelectableTile — statoz_web SelectableTile, card_game CyberSelectableCard */
+.selectable-tile{--action-accent:var(--ds-color-accent-lime);position:relative;display:block;overflow:hidden;padding:0;text-align:left;color:var(--ds-color-text-default);background:var(--ds-color-background-secondary);border:1px solid var(--ds-color-border-subtle);cursor:pointer;font:inherit;transition:border-color .15s,box-shadow .15s,transform .15s}
+.selectable-tile:hover{transform:translateY(-1px);border-color:var(--ds-color-border-strong)}
+.selectable-tile.is-dimmed{background:color-mix(in srgb,var(--ds-color-background-secondary) 58%,transparent)}
+.selectable-tile.is-selected{border:2px solid var(--action-accent);box-shadow:0 0 14px -2px color-mix(in srgb,var(--action-accent) 18%,transparent)}
+.selectable-tile:focus-visible{outline:2px solid var(--action-accent);outline-offset:2px}
+.selectable-tile-seal{position:absolute;left:0;top:0;display:grid;place-items:center;width:30px;height:30px;background:var(--action-accent);color:var(--ds-color-background-primary)}
+
+/* ControlPad — press-and-hold game input */
+.control-pad{--action-accent:var(--ds-color-accent-cyan);display:grid;place-items:center;width:64px;height:68px;touch-action:none;cursor:pointer;color:color-mix(in srgb,var(--action-accent) 75%,transparent);background:color-mix(in srgb,var(--ds-color-background-elevated) 85%,transparent);border:1px solid color-mix(in srgb,var(--action-accent) 40%,transparent);transition:background .08s,border-color .08s,color .08s}
+.control-pad.is-down{color:var(--action-accent);background:color-mix(in srgb,var(--action-accent) 26%,transparent);border:1.6px solid color-mix(in srgb,var(--action-accent) 90%,transparent)}
+.control-pad:focus-visible{outline:2px solid var(--action-accent);outline-offset:2px}
+
+/* Narrow screens: shrink CTA copy instead of truncating it (card_game scales it down to fit). */
+@media (max-width:520px){
+  .hero-cta{gap:10px;padding:0 14px}
+  .hero-cta-text{padding-right:12px}
+  .hero-cta-text strong{font-size:15px;letter-spacing:1.5px}
+  .fuse-cta-core{width:62px}
+  .fuse-cta-text{padding-left:8px}
+  .fuse-cta-text strong{font-size:13px;letter-spacing:.8px}
+  .fuse-cta-fuse{left:72px}
+  .fuse-cta-chase{display:none}
+  .pager-button{min-width:0;padding:0 16px}
+}

@@ -24,6 +24,16 @@ export const appCreativePlaceholders = {
   body: "Add one clear supporting line.",
 } as const;
 
+/**
+ * Whether an image can fill the phone frame: a portrait still between 16:9 and 21:9
+ * (a 393 × 852 capture is ~19.5:9). Assets without recorded dimensions cannot be checked.
+ */
+export function fitsPhoneCapture(asset?: Asset) {
+  if (!asset?.mime.startsWith("image/") || asset.mime === "image/svg+xml" || !asset.width || !asset.height) return false;
+  const ratio = asset.height / asset.width;
+  return ratio >= 1.7 && ratio <= 2.4;
+}
+
 export function isAppCreativeTemplate(templateId: string) {
   return ["app-showcase", "play-feature-graphic", "store-icon"].includes(templateId);
 }
@@ -65,6 +75,7 @@ export function appCreativeReadiness(project: Project, format: Format, assets: A
     const asset = byId.get(assetId);
     if (!assetId) return [`Page ${index + 1}: choose a ${tablet ? "tablet" : "phone"} capture.`];
     if (!asset?.mime.startsWith("image/")) return [`Page ${index + 1}: choose a valid still image.`];
+    if (!tablet && !fitsPhoneCapture(asset)) return [`Page ${index + 1}: the phone capture is not phone-shaped.`];
     return [];
   });
   return tablet ? issues : [...issues, ...placeholderIssues(project)];

@@ -47,6 +47,20 @@ export type MatchStat = { label: string; a: string; b: string };
 /** A single-sided fact: player of the match, fastest lap, top scorer. */
 export type MatchHighlight = { label: string; value: string };
 
+/**
+ * A match's flow, read from what ESPN reports for that sport:
+ * - `momentum` (football): each side's shots and corners per five minutes, goals marked.
+ * - `lead` (basketball): each side's running score at even checkpoints, lead changes marked.
+ * - `race` (limited-overs cricket): each side's running total per over, wickets marked.
+ */
+export type MatchTimeline = {
+  graph: "momentum" | "lead" | "race";
+  a: number[]; b: number[]; markers: { at: number; side: "A" | "B"; label: string }[];
+};
+
+/** A race finisher: where they qualified (when ESPN has the session) and where they finished. */
+export type Finisher = { name: string; qualified?: number; finished: number };
+
 export type MatchFacts = {
   sport: EspnSport; leagueId: string; leagueName: string;
   eventId: string; name: string; shortName: string; date: string;
@@ -55,6 +69,9 @@ export type MatchFacts = {
   a: MatchSide; b: MatchSide;
   stats: MatchStat[];
   highlights: MatchHighlight[];
+  timeline?: MatchTimeline;
+  /** Racing only: the top of the classification, in finishing order. */
+  classification?: Finisher[];
 };
 
 /** A row in the date listing, before the expensive summary fetch. */
@@ -83,8 +100,21 @@ export const posterRequestSchema = z.object({
   pageIndex: z.number().int().min(0).max(11).optional(),
   templateId: z.string().regex(/^[a-zA-Z0-9_-]{1,100}$/).optional(),
   format: z.enum(["square", "portrait", "reel", "landscape"]).optional(),
+  /** Seconds, for a video template such as the match story. */
+  duration: z.number().int().min(8).max(60).optional(),
   crests: z.boolean().optional(),
 });
 
 /** ESPN marks the end of a fixture differently per sport. */
 export const finishedStatuses = ["STATUS_FINAL", "STATUS_FULL_TIME", "STATUS_END_OF_EXTRATIME", "STATUS_END_OF_PLAY"];
+
+/**
+ * A story from a league's ESPN news feed. The photo belongs to its agency (the credit
+ * says whose), so it imports as `reference` media and the credit prints on the artwork.
+ */
+export type NewsArticle = {
+  id: string; headline: string; description: string; published: string; byline: string; link: string;
+  image?: { url: string; credit: string; alt: string; width: number; height: number };
+};
+export const newsQuerySchema = z.object({ leagueId: id });
+export const newsPhotoSchema = z.object({ leagueId: id, articleId: z.string().regex(/^\d{1,20}$/) });

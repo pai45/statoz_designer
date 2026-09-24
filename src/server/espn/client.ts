@@ -57,3 +57,7 @@ export function summary<T>(league: EspnLeague, eventId: string): Promise<T> {
   const url = `${BASE}/${leaguePath(league)}/summary?event=${eventId}`;
   return cached(url, () => get<T>(url));
 }
+export function news<T>(league: EspnLeague): Promise<T> {
+  const url = `${BASE}/${leaguePath(league)}/news?limit=30`;
+  return cached(url, () => get<T>(url));
+}

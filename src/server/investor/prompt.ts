@@ -1,5 +1,5 @@
 import type { InvestorReview } from "@/domain/investor-review";
-import type { Project } from "@/domain/project";
+import { maxPitchPages, type Project } from "@/domain/project";
 
 export function investorReviewPrompt(review: InvestorReview, project: Project, rubric: string) {
   return `# Investor Lens: India seed-VC first screening
@@ -41,7 +41,7 @@ export function investorRevisionPrompt(review: InvestorReview, candidate: Projec
     : `Edit only ${candidateFile}. Do not edit the source deck, another project, assets, exports, or repository files. Finish when that candidate JSON is valid.`;
   return `# Investor Lens: approved pitch-deck revision
 
-Apply only the approved recommendations below to the temporary candidate deck. You may reorder, add, remove, rewrite, or relayout slides within the existing project schema and twelve-page limit. Preserve verified claims, registered asset IDs, pitch-family provenance, and all protected identifiers.
+Apply only the approved recommendations below to the temporary candidate deck. You may reorder, add, remove, rewrite, or relayout slides within the existing project schema and ${maxPitchPages}-page pitch limit. Preserve verified claims, registered asset IDs, pitch-family provenance, and all protected identifiers.
 
 Founder answers are supplied claims, not independent verification. When an answer enters a slide, keep a visible source note such as "Founder supplied, [date or source note]; not independently verified." If an answer lacks enough support, keep the affected claim qualified or input-needed. Never invent traction, retention, financials, market figures, team credentials, customers, or financing terms.
 

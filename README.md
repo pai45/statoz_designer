@@ -65,6 +65,26 @@ For a production build: `npm run build`, then `npm start`.
   only. Re-running refreshes in place rather than duplicating. Imported portraits are
   real athlete images and land marked **product reference** - record campaign approval
   per asset in Assets & brand before using one in a published post.
+- The App showcase phone picker draws on curated app screens (games, gameplay, match
+  stats, predictions, profile, shop) imported from the same game folder:
+
+  ```powershell
+  npm run import:app-screens -- --from "C:path	ocard_game"
+  ```
+
+  Only phone-shaped captures are offered for the phone frame, and choosing a curated
+  screen fills the page's eyebrow, headline, and supporting copy unless you already
+  edited them. Add `--dry-run` to list the screens without writing.
+- Gameplay screens for every game come from the same folder's existing web build:
+
+  ```powershell
+  npm run capture:gameplay -- --from "C:path	ocard_game"
+  ```
+
+  This serves `card_game/build/web` as it is (it never builds or changes that folder),
+  plays each game in a fresh preview profile, and saves one mid-play frame per game to
+  `output/app-gameplay` and the asset library. Use `--only pitch-duel,hoop-duel` to redo
+  a few games. Frames vary a little between runs because the games are random.
 - Import PNG/JPEG/WebP, MP4/WebM, or MP3/WAV/M4A/OGG in Assets & brand. Static images
   are supported in card, feature, and launch layouts; clips in feature/launch.
   Crop positions and clip in/out points are editable. End frame holds after a clip

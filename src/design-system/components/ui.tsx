@@ -33,6 +33,10 @@ export function Icon({ name, size = 20 }: { name: string; size?: number }) {
     upload: <><path d="M12 16V3m-5 5 5-5 5 5M4 16v5h16v-5"/></>,
     share: <><circle cx="18" cy="5" r="2.5"/><circle cx="6" cy="12" r="2.5"/><circle cx="18" cy="19" r="2.5"/><path d="m8.2 10.8 7.6-4.4m-7.6 6.8 7.6 4.4"/></>,
     brand: <><path d="m12 2 9 5v10l-9 5-9-5V7Z"/><path d="m7 14 10-4m-8-3 6 10"/></>,
+    minus: <path d="M5 12h14"/>, chevron: <path d="m9 5 7 7-7 7"/>, chevrons: <path d="m6 5 7 7-7 7M13 5l7 7-7 7"/>,
+    left: <path d="m15 5-7 7 7 7"/>, up: <path d="m5 15 7-7 7 7"/>, down: <path d="m5 9 7 7 7-7"/>,
+    lock: <><rect x="5" y="11" width="14" height="10" rx="1"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/></>,
+    flame: <path d="M12 3c1 4 5 5.5 5 10a5 5 0 0 1-10 0c0-2.5 1.5-4 2.5-5 .5 2 1.5 3 2.5 3-1-3 0-6 0-8Z"/>,
   };
   return <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">{paths[name] ?? paths.spark}</svg>;
 }

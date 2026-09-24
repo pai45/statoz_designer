@@ -40,7 +40,16 @@ for their own completion. Imported media is immutable and cacheable by asset ID.
 - POST `/api/audio-preview`: validated video project → deterministic SFX WAV.
 - GET/POST `/api/assets`; GET `/api/assets/:id`; PATCH `/api/assets/:id` approval.
   Newly imported PNG files record dimensions and alpha-channel metadata used by the
-  store-icon export gate.
+  store-icon export gate. Asset responses include a purpose category for the studio
+  library; older schema-version-1 records are classified on read and are not rewritten.
+  App screens (`src/domain/app-screens.ts`) are copied from the card_game screenshot
+  catalog by `scripts/import-app-screens.ts` under stable ids; the same list groups the
+  App showcase phone picker, supplies each screen's default page copy, and picks the
+  page's category background (`src/features/compositions/app-showcase-backdrops.tsx`).
+  Gameplay screens are captured by `scripts/capture-gameplay.ts`, which serves the
+  unchanged card_game web build locally, runs per-game recipes
+  (`src/server/capture/gameplay-recipes.ts`) through Flutter's semantics tree, and
+  registers each frame with the same asset writer as the catalog importer.
 - GET `/api/players` with optional `q` and `sport` filters; POST `/api/players`;
   PUT `/api/players/:id`. Portraits must reference a registered image asset.
   The parsed library is cached against the players folder's modification time and

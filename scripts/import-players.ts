@@ -48,7 +48,7 @@ async function importPortrait(player: ImportedPlayer): Promise<string> {
   }
   const asset: Asset = {
     schemaVersion: 1, id: assetId, name: `${player.name} · portrait`, file: path.relative(process.cwd(), target),
-    mime, bytes: stat.size, source: `${SOURCE} ${player.portraitRelative}`,
+    mime, bytes: stat.size, source: `${SOURCE} ${player.portraitRelative}`, category: "player-portrait",
     approval: current?.approval ?? "reference", createdAt: current?.createdAt ?? new Date().toISOString(),
   };
   await atomicWrite(location("assets", assetId), asset);

@@ -1,0 +1,51 @@
+/* Status, feedback, surface and navigation elements. The accent arrives as --el-accent. */
+.el-badge,.el-pill,.el-progress,.el-signal,.el-accent-panel,.el-underline{--el-accent:var(--ds-color-accent-cyan)}
+
+/* Badge */
+.el-badge{display:inline-flex;align-items:center;gap:5px;color:var(--el-accent);font:800 var(--ds-text-2xs)/1 var(--ds-font-display);letter-spacing:var(--ds-tracking-wide);white-space:nowrap}
+.el-badge-outlined{padding:4px 7px;letter-spacing:var(--ds-tracking-label);border:1px solid color-mix(in srgb,var(--el-accent) 62%,transparent);background:color-mix(in srgb,var(--el-accent) 12%,transparent);box-shadow:0 0 8px -4px color-mix(in srgb,var(--el-accent) 20%,transparent)}
+.el-badge-outlined>i{width:5px;height:5px;border-radius:50%;background:var(--el-accent)}
+.el-badge.is-pulse{animation:el-pulse 2s ease-in-out infinite}
+@keyframes el-pulse{50%{opacity:.55}}
+
+/* StatusPill, DeltaChip */
+.el-pill{display:inline-flex;align-items:center;gap:6px;padding:5px 8px;color:var(--el-accent);border:1px solid color-mix(in srgb,var(--el-accent) 55%,transparent);background:color-mix(in srgb,var(--el-accent) 10%,transparent);font:800 9px/1 var(--ds-font-display);letter-spacing:.8px;text-transform:uppercase;white-space:nowrap;font-variant-numeric:tabular-nums}
+.el-pill>b{color:var(--ds-color-text-default);font-weight:800}
+.el-delta.is-up{--el-accent:var(--ds-color-accent-lime)}
+.el-delta.is-down{--el-accent:var(--ds-color-danger)}
+.el-delta.is-flat{--el-accent:var(--ds-color-text-muted)}
+
+/* Progress, StepMeter */
+.el-progress{width:100%;overflow:hidden;border-radius:var(--ds-radius-sm);background:color-mix(in srgb,var(--ds-color-background-primary) 70%,transparent)}
+.el-progress>i{display:block;height:100%;border-radius:inherit;background:var(--el-accent);box-shadow:0 0 6px -1px color-mix(in srgb,var(--el-accent) 30%,transparent);transition:width .5s ease-out}
+.el-steps{display:flex;gap:8px;width:100%}
+.el-steps>i{flex:1;height:8px;background:var(--ds-color-border-default);transition:background .2s,box-shadow .2s}
+.el-steps>i.is-passed{background:var(--ds-gradient-step-passed)}
+.el-steps>i.is-current{background:var(--ds-gradient-step-current);box-shadow:0 0 8px 0 color-mix(in srgb,var(--ds-color-accent-orange) 35%,transparent)}
+
+/* SignalPanel — lift, edge and fill share --ds-clip-signal */
+.el-signal{position:relative;isolation:isolate;min-width:0}
+.el-signal.is-lifted::before{content:"";position:absolute;inset:-1px;z-index:-1;transform:translateY(var(--ds-shape-signal-lift));clip-path:var(--ds-clip-signal);background:color-mix(in srgb,var(--el-accent) 22%,transparent)}
+.el-signal-body{position:relative;isolation:isolate;display:flex;flex-direction:column;height:100%}
+.el-signal-body::before,.el-signal-body::after{content:"";position:absolute;z-index:-1;clip-path:var(--ds-clip-signal)}
+.el-signal-body::before{inset:-1px;background:color-mix(in srgb,var(--el-accent) 55%,transparent)}
+.el-signal-body::after{inset:0;background:color-mix(in srgb,var(--el-accent) 8%,var(--ds-color-background-elevated))}
+.el-signal-line{position:absolute;top:0;height:2px;left:var(--ds-shape-signal-cut);right:calc(var(--ds-shape-signal-notch) + var(--ds-shape-signal-step));background:color-mix(in srgb,var(--el-accent) 80%,transparent)}
+.el-signal-rail{display:flex;align-items:center;justify-content:space-between;gap:8px;height:36px;padding:0 14px}
+.el-signal-content{display:flex;flex:1;flex-direction:column;gap:8px;padding:0 14px 10px;min-height:0}
+.el-signal-footer{display:flex;align-items:center;gap:8px;height:32px;padding:0 14px;border-top:1px solid color-mix(in srgb,var(--el-accent) 16%,transparent);background:color-mix(in srgb,var(--el-accent) 7%,var(--ds-color-background-muted));clip-path:polygon(0 0,100% 0,100% calc(100% - var(--ds-shape-signal-cut)),calc(100% - var(--ds-shape-signal-cut)) 100%,var(--ds-shape-signal-cut) 100%,0 calc(100% - var(--ds-shape-signal-cut)))}
+
+/* AccentPanel — square top, both bottom corners cut */
+.el-accent-panel{position:relative;min-width:0}
+.el-accent-panel.is-glow{filter:drop-shadow(0 0 8px color-mix(in srgb,var(--el-accent) 35%,transparent))}
+.el-accent-shell{padding:1px;clip-path:var(--ds-clip-fixture-flat);background:color-mix(in srgb,var(--el-accent) 50%,transparent)}
+.el-accent-panel.is-glow .el-accent-shell{background:color-mix(in srgb,var(--el-accent) 80%,transparent)}
+.el-accent-shell>div{clip-path:inherit;background:var(--ds-color-background-elevated);padding:16px}
+
+/* UnderlineTabs */
+.el-underline{position:relative;display:flex;min-height:48px;overflow-x:auto;scrollbar-width:none;border-bottom:1px solid color-mix(in srgb,var(--el-accent) 22%,transparent);background:color-mix(in srgb,var(--ds-color-background-primary) 40%,transparent)}
+.el-underline>button{flex:1 1 0;min-width:96px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;min-height:44px;padding:0 14px;border:0;background:transparent;cursor:pointer;color:var(--ds-color-text-muted);font:900 var(--ds-text-2xs)/1 var(--ds-font-display);letter-spacing:var(--ds-tracking-ultra);text-transform:uppercase;transition:color .2s,background .2s}
+.el-underline>button[aria-selected=true]{color:var(--el-accent);background:color-mix(in srgb,var(--el-accent) 7%,transparent)}
+.el-underline>button:hover{color:var(--ds-color-text-default)}
+.el-underline>button:focus-visible{outline:2px solid var(--el-accent);outline-offset:-2px}
+.el-underline>i{position:absolute;bottom:0;height:3px;background:var(--el-accent);box-shadow:0 0 10px color-mix(in srgb,var(--el-accent) 70%,transparent);transition:left .3s ease-out,width .3s ease-out}

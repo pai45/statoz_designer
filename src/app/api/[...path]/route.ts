@@ -8,11 +8,12 @@ import { createProject, templates } from "@/features/templates/registry";
 import { addPlayer, addProject, assetPath, atomicWrite, createPitchVariant, dataRoot, deleteProject, initialize, listAssets, listInvestorReviews, listJobs, listPlayers, listProjects, listPublish, listRuns, location, pitchVariantFrom, readInvestorReview, readJob, readProject, readRun, saveProject, savePlayer, StudioError, validateProject } from "@/server/storage";
 import { closePublish, createPublish, markPosted, publisherStatus, publishOptions, readPublishSettings, requestSignIn, retryPublish, savePublishSettings } from "@/server/publish/queue";
 import { agentStatus, cancelRun, createRun, readAgentSettings, readRunLog, retryRun, saveAgentSettings } from "@/server/agents/queue";
-import { espnCatalogue, espnMatch, espnMatches, espnPoster } from "@/server/espn/queue";
+import { espnCatalogue, espnMatch, espnMatches, espnNews, espnNewsPhoto, espnPoster } from "@/server/espn/queue";
 import { compositionHtml } from "@/server/composition-html";
 import { cancelJob, enqueue, retryJob } from "@/server/jobs";
 import { doctor, pngMetadata, probeMedia, svgDimensions } from "@/server/runtime";
 import { soundtrackSfx } from "@/server/audio";
+import { listBrandKit, readBrandKitFile } from "@/server/brand-kit";
 import { applyInvestorReview, cancelInvestorReview, createInvestorReview, retryInvestorReview } from "@/server/investor/queue";
 
 type Context = { params: Promise<{ path: string[] }> };
@@ -77,6 +78,11 @@ async function handle(req: NextRequest, context: Context): Promise<Response> {
       const body = await req.json(); const project = validateProject(body.project);
       return new Response(await compositionHtml(project, body.pageIndex || 0), { headers: { "Content-Type": "text/html; charset=utf-8", "Cache-Control": "no-store" } });
     }
+    if (resource === "brand-kit" && method === "GET") {
+      if (!id) return Response.json(await listBrandKit());
+      const file = await readBrandKitFile(id); if (!file) throw new StudioError("Design kit file not found.", 404);
+      return new Response(new Uint8Array(file.data), { headers: { "Content-Type": file.mime, "Cache-Control": "no-store", "X-Content-Type-Options": "nosniff", "Content-Disposition": `attachment; filename="${file.fileName}"`, "Content-Length": String(file.data.length) } });
+    }
     if (resource === "assets") {
       if (method === "GET") {
         const assets = await listAssets(); if (!id) return Response.json(assets);
@@ -103,7 +109,8 @@ async function handle(req: NextRequest, context: Context): Promise<Response> {
           // ffmpeg cannot decode SVG, so vectors carry their own dimensions.
           const metadata = ext === ".svg" ? svgDimensions(await fs.readFile(target, "utf8")) : ext === ".png" ? { ...await probeMedia(target), ...pngMetadata(bytes) } : await probeMedia(target);
           if (mimes[ext].startsWith("image/") && ext !== ".svg" && !metadata.width) throw new StudioError("This image could not be decoded.");
-          const asset: Asset = { schemaVersion: 1, id: assetId, name: file.name, file: path.relative(process.cwd(), target), mime: mimes[ext], bytes: file.size, source: `User import: ${file.name}`, approval: form.get("approved") === "true" ? "approved" : "reference", createdAt: new Date().toISOString(), ...metadata };
+          const mime = mimes[ext];
+          const asset: Asset = { schemaVersion: 1, id: assetId, name: file.name, file: path.relative(process.cwd(), target), mime, bytes: file.size, category: mime.startsWith("audio/") || mime.startsWith("video/") ? "audio-video" : "uploads", source: `User import: ${file.name}`, approval: form.get("approved") === "true" ? "approved" : "reference", createdAt: new Date().toISOString(), ...metadata };
           await atomicWrite(location("assets", assetId), asset); return Response.json(asset, { status: 201 });
         } catch (e) { await fs.unlink(target).catch(() => {}); throw e; }
       }
@@ -172,6 +179,8 @@ async function handle(req: NextRequest, context: Context): Promise<Response> {
       if (method === "GET" && id === "matches") return Response.json(await espnMatches(Object.fromEntries(req.nextUrl.searchParams)));
       if (method === "GET" && id === "match" && action) return Response.json(await espnMatch(req.nextUrl.searchParams.get("leagueId") || "", action, req.nextUrl.searchParams.get("date") || undefined));
       if (method === "POST" && id === "poster") return Response.json(await espnPoster(await req.json()), { status: 201 });
+      if (method === "GET" && id === "news") return Response.json(await espnNews(Object.fromEntries(req.nextUrl.searchParams)));
+      if (method === "POST" && id === "news-photo") return Response.json(await espnNewsPhoto(await req.json()), { status: 201 });
     }
     if (resource === "agent-settings") {
       if (method === "GET") return Response.json(await readAgentSettings());

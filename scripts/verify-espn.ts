@@ -9,7 +9,8 @@
 import { espnLeagues, type EspnSport } from "../src/domain/espn";
 import { initialize } from "../src/server/storage";
 import { espnMatch, espnMatches } from "../src/server/espn/queue";
-import { featuredStat, sceneFieldsFor } from "../src/server/espn/poster";
+import { featuredStat, fillMatchStory, sceneFieldsFor } from "../src/server/espn/poster";
+import { createProject } from "../src/features/templates/registry";
 
 await initialize();
 const days = Number(process.argv.find(a => a.startsWith("--days="))?.split("=")[1] ?? 10);
@@ -40,9 +41,13 @@ for (const sport of ["football", "basketball", "cricket", "motorsport"] as EspnS
         if (!fields.eyebrow) problems.push("no eyebrow");
         if (!fields.headline) problems.push("no headline");
         if (sport !== "motorsport" && !stat) problems.push("no comparable stat");
+        // The match story keeps only the beats this match can fill; each sport should reach its stats beat.
+        const story = fillMatchStory(createProject("match-story", "reel", sport, 15), facts, { a: "", b: "" });
+        const beats = story.pages.map(page => page.beat);
+        if (!beats.includes("stats")) problems.push("match story has no stats beat");
         checked++;
         if (problems.length) { failures++; console.error(`FAIL ${league.name} ${match.shortName}: ${problems.join(", ")}`); }
-        else console.log(`OK   ${league.name.padEnd(30)} ${facts.shortName.padEnd(14)} ${String(stat?.label ?? "podium").padEnd(16)} ${facts.stats.length} stats, ${facts.highlights.length} highlights`);
+        else console.log(`OK   ${league.name.padEnd(30)} ${facts.shortName.padEnd(14)} ${String(stat?.label ?? "podium").padEnd(16)} ${facts.stats.length} stats, ${facts.highlights.length} highlights, story: ${beats.join(" > ")}${facts.timeline ? ` (${facts.timeline.graph})` : ""}`);
         done = true;
       } catch (error) { failures++; console.error(`FAIL ${league.name} ${match.eventId}: ${(error as Error).message}`); done = true; }
     }

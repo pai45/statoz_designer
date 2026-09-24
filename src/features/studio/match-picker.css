@@ -24,5 +24,10 @@
 .fact-chips>span{font-size:9px;color:#a8c2d8;background:#0e1c29;border:1px solid #26384e;padding:7px 10px;display:flex;gap:7px;align-items:baseline}
 .fact-chips i{font-style:normal;font-family:var(--ds-font-display);font-size:7px;letter-spacing:1.2px;color:var(--studio-accent)}
 .match-facts .muted-note{font-size:9px;line-height:1.7}
+.match-output{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:14px}
+.story-beats{display:flex;flex-direction:column;gap:9px}
+.story-beats ol{display:flex;flex-wrap:wrap;gap:8px;list-style:none;margin:0;padding:0;counter-reset:beat}
+.story-beats li{counter-increment:beat;display:flex;gap:7px;align-items:baseline;font-size:10px;color:#a8c2d8;background:#0e1c29;border:1px solid #26384e;padding:7px 10px}
+.story-beats li::before{content:counter(beat,decimal-leading-zero);font-family:var(--ds-font-display);font-size:7px;letter-spacing:1.2px;color:var(--studio-accent)}
 
 @media(max-width:620px){.match-controls{grid-template-columns:1fr}}

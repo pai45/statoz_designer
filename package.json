@@ -24,7 +24,10 @@
     "compositions": "node scripts/build-compositions.mjs",
     "import:players": "tsx scripts/import-players.ts",
     "import:line-art": "tsx scripts/import-line-art.ts",
+    "import:app-screens": "tsx scripts/import-app-screens.ts",
+    "capture:gameplay": "tsx scripts/capture-gameplay.ts",
     "test:line-art": "tsx scripts/verify-line-art.ts",
+    "design:sync": "tsx scripts/sync-design-system.ts",
     "assistant": "tsx src/server/agent.ts",
     "test:espn": "tsx scripts/verify-espn.ts"
   },

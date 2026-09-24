@@ -1,8 +1,10 @@
 import type { PresentationSlide, Scene } from "@/domain/project";
 
 const layouts: { value: PresentationSlide["layout"]; label: string }[] = [
-  { value: "cover", label: "Cover" }, { value: "statement", label: "Statement" }, { value: "device", label: "Product / device" },
+  { value: "problem-map", label: "Problem / staggered map" },
+  { value: "cover", label: "Cover" }, { value: "cover-frame", label: "Cover / frame" }, { value: "statement", label: "Statement" }, { value: "device", label: "Product / device" },
   { value: "loop", label: "Connected loop" }, { value: "comparison", label: "Comparison" }, { value: "convergence", label: "Category convergence" },
+  { value: "solution-stack", label: "Solution / journey stack" }, { value: "market", label: "Market scale" }, { value: "funds", label: "Use of funds" }, { value: "invite", label: "Invitation / contact" }, { value: "showcase", label: "Product showcase" }, { value: "team", label: "Founding team" },
   { value: "timeline", label: "Timeline" }, { value: "seasonality", label: "Season calendar" }, { value: "traction", label: "Traction" }, { value: "closing", label: "Closing" },
 ];
 const visuals: { value: PresentationSlide["visual"]; label: string }[] = [

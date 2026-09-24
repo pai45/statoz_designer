@@ -2,6 +2,7 @@ import fs from "node:fs/promises";
 import path from "node:path";
 import { createHash, randomUUID } from "node:crypto";
 import { projectSchema, type Asset, type Project, type ProjectEnvelope, type RenderJob } from "@/domain/project";
+import { normalizeAssetCategory } from "@/domain/asset-library";
 import { playerInputSchema, playerMatches, playerSchema, samplePlayers, sampleSource, type Player, type PlayerInput } from "@/domain/player";
 import type { PublishRecord } from "@/domain/publish";
 import type { AgentRun } from "@/domain/agent";
@@ -76,9 +77,9 @@ export function initialize() {
       }
       if (await fs.stat(path.join(dataRoot, ".initialized")).catch(() => null)) return;
       const builtins = [
-        { id: "stadium", name: "Pitch Duel · Match arena", file: "public/assets/library/stadium.png", source: "statoz_web/public/assets/games/pitch-duel/match-stadium.png", approval: "reference" as const },
-        { id: "arena", name: "Penalty arena", file: "public/assets/library/arena.png", source: "statoz_web/public/assets/backgrounds/penalty_arena.png", approval: "reference" as const },
-        { id: "statoz-logo", name: "StatOz · Brand mark", file: "public/assets/brand/logo.png", source: "statoz_web/public/assets/icons/app_logo.png", approval: "brand" as const },
+        { id: "stadium", name: "Pitch Duel · Match arena", file: "public/assets/library/stadium.png", source: "statoz_web/public/assets/games/pitch-duel/match-stadium.png", approval: "reference" as const, category: "product-capture" as const },
+        { id: "arena", name: "Penalty arena", file: "public/assets/library/arena.png", source: "statoz_web/public/assets/backgrounds/penalty_arena.png", approval: "reference" as const, category: "product-capture" as const },
+        { id: "statoz-logo", name: "StatOz · Brand mark", file: "public/assets/brand/logo.png", source: "statoz_web/public/assets/icons/app_logo.png", approval: "brand" as const, category: "brand-artwork" as const },
       ];
       for (const item of builtins) {
         const stat = await fs.stat(path.join(/* turbopackIgnore: true */ root, item.file));
@@ -171,7 +172,7 @@ export async function createPitchVariant(sourceId: string, variantName: string, 
 }
 export async function listAssets(): Promise<Asset[]> {
   await initialize();
-  return Promise.all((await jsonFiles("assets")).map(async file => JSON.parse(await fs.readFile(file, "utf8")) as Asset));
+  return Promise.all((await jsonFiles("assets")).map(async file => normalizeAssetCategory(JSON.parse(await fs.readFile(file, "utf8")) as Asset)));
 }
 export async function assetPath(asset: Asset) {
   const candidate = path.resolve(/* turbopackIgnore: true */ root, asset.file);

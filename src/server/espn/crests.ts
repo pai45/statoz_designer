@@ -35,6 +35,7 @@ export async function importCrest(side: MatchSide, sport: string): Promise<strin
     schemaVersion: 1, id, name: `${side.name} crest`, file: path.relative(process.cwd(), target),
     mime, bytes: body.length,
     source: `ESPN: ${side.logo}`,
+    category: "team-crest",
     approval: "reference",
     createdAt: existing?.createdAt ?? new Date().toISOString(),
   };

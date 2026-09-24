@@ -116,11 +116,11 @@ try {
   const form = new FormData(); form.set("file", new File([pngBytes], "studio-verified-artwork.png", { type: "image/png" })); form.set("approved", "true");
   const imported = await fetch(`${base}/api/assets`, { method: "POST", headers: { Origin: base }, body: form });
   if (!imported.ok) throw new Error(await imported.text());
-  const asset: Asset = await imported.json(); assert.equal(asset.width, 1080); assert.equal(asset.height, 1350); assert.equal(asset.approval, "approved");
+  const asset: Asset = await imported.json(); assert.equal(asset.width, 1080); assert.equal(asset.height, 1350); assert.equal(asset.approval, "approved"); assert.equal(asset.category, "uploads");
   console.log("PASS local media import and metadata");
 
   await page.goto(base); await page.getByRole("button", { name: "Templates", exact: true }).click(); await page.screenshot({ path: path.join(output, "templates-desktop.png"), fullPage: true });
-  await page.getByRole("button", { name: "Assets & brand", exact: true }).click(); await page.getByRole("tab", { name: "Brand system", exact: true }).click(); await page.screenshot({ path: path.join(output, "brand-desktop.png"), fullPage: true });
+  await page.getByRole("button", { name: "Assets & brand", exact: true }).click(); await page.getByRole("tab", { name: "Brand", exact: true }).click(); await page.screenshot({ path: path.join(output, "brand-desktop.png"), fullPage: true });
   await page.getByRole("button", { name: "Exports", exact: true }).click(); await page.screenshot({ path: path.join(output, "exports-desktop.png"), fullPage: true });
   await page.setViewportSize({ width: 412, height: 900 }); await page.getByRole("button", { name: "Projects", exact: true }).click();
   assert.ok(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth));

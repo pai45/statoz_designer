@@ -1,10 +1,12 @@
 import type { z } from "zod";
-import { espnLeagues, matchQuerySchema, posterRequestSchema, type MatchFacts, type MatchListing } from "@/domain/espn";
+import { espnLeagues, matchQuerySchema, newsPhotoSchema, newsQuerySchema, posterRequestSchema, type MatchFacts, type MatchListing, type NewsArticle } from "@/domain/espn";
 import { addProject, readProject, saveProject, StudioError } from "@/server/storage";
-import { listMatches, matchFacts, raceFacts } from "@/server/espn/adapters";
-import { requireLeague, scoreboard, summary } from "@/server/espn/client";
-import { buildPoster, featuredStat, orderStats, sceneFieldsFor } from "@/server/espn/poster";
+import { listMatches, matchFacts, newsArticles, raceFacts } from "@/server/espn/adapters";
+import { news, requireLeague, scoreboard, summary } from "@/server/espn/client";
+import { buildPoster, featuredStat, fillMatchStory, orderStats, sceneFieldsFor } from "@/server/espn/poster";
+import { templateFor } from "@/features/templates/registry";
 import { importCrest } from "@/server/espn/crests";
+import { importNewsPhoto } from "@/server/espn/news";
 
 function parse<T extends z.ZodType>(schema: T, input: unknown): z.infer<T> {
   const result = schema.safeParse(input);
@@ -51,7 +53,27 @@ export async function espnPoster(input: unknown) {
     : { a: await importCrest(facts.a, facts.sport), b: await importCrest(facts.b, facts.sport) };
   const index = Math.min(request.pageIndex ?? 0, current.project.pages.length - 1);
   const fields = sceneFieldsFor(facts, stat, crests);
-  const project = { ...current.project, pages: current.project.pages.map((page, i) => (i === index ? { ...page, ...fields } : page)) };
+  // A match story is one fixture told across beats, so the match fills every scene.
+  const project = templateFor(current.project.templateId).visual === "match-story" ? fillMatchStory(current.project, facts, crests)
+    : { ...current.project, pages: current.project.pages.map((page, i) => (i === index ? { ...page, ...fields } : page)) };
   const saved = await saveProject(project, current.etag);
   return { project: saved.project, etag: saved.etag, facts };
+}
+
+export async function espnNews(input: unknown): Promise<NewsArticle[]> {
+  const { leagueId } = parse(newsQuerySchema, input);
+  return newsArticles(await news(requireLeague(leagueId)));
+}
+
+/**
+ * Imports a story's photo and returns the scene fields a news flash takes from it. The
+ * editor applies them like any other edit, so the fill is undoable and saves normally.
+ */
+export async function espnNewsPhoto(input: unknown) {
+  const { leagueId, articleId } = parse(newsPhotoSchema, input);
+  const article = (await espnNews({ leagueId })).find(item => item.id === articleId);
+  if (!article) throw new StudioError("That story is no longer in the feed. Reload the stories and pick again.", 404);
+  const assetId = await importNewsPhoto(article);
+  const credit = [article.image?.credit ? `PHOTO: ${article.image.credit}` : "", "STORY: ESPN"].filter(Boolean).join(" · ").toUpperCase().slice(0, 200);
+  return { assetId, headline: article.headline, body: article.description, credit };
 }

@@ -1,12 +1,6 @@
 import type { CSSProperties } from "react";
 import type { Scene } from "@/domain/project";
-
-const clamp = (n: number) => Math.min(1, Math.max(0, n));
-const smoothstep = (n: number) => {
-  const value = clamp(n);
-  return value * value * (3 - 2 * value);
-};
-const easeOut = (n: number) => 1 - Math.pow(1 - clamp(n), 3);
+import { clamp, easeOut, smoothstep } from "./motion";
 
 type CarProps = {
   x: number;
@@ -19,7 +13,7 @@ type CarProps = {
 };
 
 /** SVG port of the Grand Prix game's Formula-car painter. */
-function GrandPrixCar({ x, y, scale = 1, rotation = 0, primary, accent, player = false }: CarProps) {
+export function GrandPrixCar({ x, y, scale = 1, rotation = 0, primary, accent, player = false }: CarProps) {
   const edge = primary === "#0a0e14" ? "#03060a" : "#111923";
   return <g transform={`translate(${x} ${y}) rotate(${rotation}) scale(${scale}) translate(-50 -95)`}>
     {player && <ellipse cx="50" cy="96" rx="57" ry="102" fill={accent} opacity=".13"/>}

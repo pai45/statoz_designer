@@ -1,10 +1,15 @@
 import type { CSSProperties } from "react";
-import { durationOf, formats, sceneAt, sports, type Project, type Scene } from "@/domain/project";
+import { durationOf, formats, launchGames, sceneAt, sports, type Project, type Scene } from "@/domain/project";
 import { templateFor } from "@/features/templates/registry";
 import { PitchDeckSlide } from "./pitch-deck";
 import { GrandPrixExperience } from "./grand-prix";
+import { GameplayExperience, isGameplayDemoGame } from "./gameplay";
 import { AppCreative } from "./app-creatives";
 import { SportDiagram } from "./sport-diagrams";
+import { GameArt } from "./game-art";
+import { MatchStoryScene } from "./match-story";
+import { NewsFlash } from "./news";
+import { StatBreakdownArt } from "./stat-breakdown";
 
 export type Media = { src: string; mime: string; duration?: number };
 export type CompositionProps = { project: Project; time?: number; pageIndex?: number; media?: Record<string, Media>; logo?: string; guides?: boolean };
@@ -44,10 +49,10 @@ function MatchArt({ scene, result, media }: { scene: Scene; result: boolean; med
     </div>
   </div>;
 }
-function StatsArt({ scene, comparison }: { scene: Scene; comparison: boolean }) {
+function ComparisonArt({ scene }: { scene: Scene }) {
   const a = Math.min(100, Math.max(3, Number.parseFloat(scene.scoreA) || 78));
   const b = Math.min(100, Math.max(3, Number.parseFloat(scene.scoreB) || 54));
-  return <div className={`stats-art ${comparison ? "comparison-art" : ""}`}><span className="micro-label">{scene.statLabel}</span>{comparison ? <div className="comparison-values"><div><small>{scene.nameA}</small><strong>{scene.scoreA}</strong></div><span>/</span><div><small>{scene.nameB}</small><strong>{scene.scoreB}</strong></div></div> : <div className="hero-stat"><strong>{scene.statValue}</strong><span>IN FOCUS</span></div>}<div className="chart-bars">{(comparison ? [a, b] : scene.chartValues).map((n, i) => <div key={i} style={{ height: `${n}%`, opacity: .25 + i * .075 }}/>)}</div><div className="chart-baseline"><span>01</span><span>THE PERFORMANCE</span><span>10</span></div>{comparison && <div className="comparison-key"><span>{scene.nameA}</span><span>{scene.nameB}</span></div>}</div>;
+  return <div className="stats-art comparison-art"><span className="micro-label">{scene.statLabel}</span><div className="comparison-values"><div><small>{scene.nameA}</small><strong>{scene.scoreA}</strong></div><span>/</span><div><small>{scene.nameB}</small><strong>{scene.scoreB}</strong></div></div><div className="chart-bars">{[a, b].map((n, i) => <div key={i} style={{ height: `${n}%`, opacity: .25 + i * .075 }}/>)}</div><div className="chart-baseline"><span>01</span><span>THE PERFORMANCE</span><span>10</span></div><div className="comparison-key"><span>{scene.nameA}</span><span>{scene.nameB}</span></div></div>;
 }
 
 export function Composition({ project, time = 0, pageIndex = 0, media = {}, logo = "/assets/brand/logo.png", guides = false }: CompositionProps) {
@@ -61,10 +66,16 @@ export function Composition({ project, time = 0, pageIndex = 0, media = {}, logo
   const transform = scene.motion === "slide" ? `translateX(${(1 - entry) * 70}px)` : scene.motion === "zoom" ? `scale(${.92 + entry * .08})` : `translateY(${(1 - entry) * 40}px)`;
   const src = media[scene.assetId];
   const isClip = src?.mime.startsWith("video/");
+  // Launch scenes draw the chosen game's gameplay art into the background unless media overrides it.
+  const gameArt = template.visual === "launch" && scene.game ? scene.game : undefined;
   const style = { width: dimensions.width, height: dimensions.height, "--accent": sports[project.sport].accent } as CSSProperties;
   if (["app-showcase", "play-feature", "store-icon"].includes(template.visual)) return <div id="composition" className={`composition format-${project.format} visual-${template.visual}`} style={style}>
     <AppCreative visual={template.visual as "app-showcase" | "play-feature" | "store-icon"} scene={scene} index={index} total={project.pages.length} format={project.format} media={media} logo={logo} guides={guides}/>
     {guides && template.visual !== "store-icon" && <div className="safe-guide"><span>SAFE AREA</span></div>}
+  </div>;
+  if (template.visual === "news") return <div id="composition" className={`composition format-${project.format} visual-news news-${scene.layout}`} style={style}>
+    <NewsFlash scene={scene} format={project.format} sport={project.sport} media={media} logo={logo} sample={project.sample}/>
+    {guides && <div className="safe-guide"><span>SAFE AREA</span></div>}
   </div>;
   if (template.visual === "pitch") return <div id="composition" className={`composition format-${project.format} visual-pitch`} style={style}>
     <PitchDeckSlide scene={scene} index={index} total={project.pages.length} logo={logo} visualSrc={isClip ? undefined : src?.src}/>
@@ -74,11 +85,15 @@ export function Composition({ project, time = 0, pageIndex = 0, media = {}, logo
     <div className="composition-grid"/><div className="composition-vignette"/>
     <div className="canvas-corner top"/><div className="canvas-corner bottom"/>
     {template.visual === "grand-prix" && <GrandPrixExperience key={`gp-${index}-${localTime.toFixed(6)}`} scene={scene} index={index} localTime={localTime} total={project.pages.length}/>}
+    {/* Gameplay demos pick their game from the scene, so one visual covers the whole arcade family. */}
+    {template.visual === "gameplay" && <GameplayExperience key={`gd-${index}-${localTime.toFixed(6)}`} game={isGameplayDemoGame(scene.game) ? scene.game : "penalty-shootout"} scene={scene} index={index} localTime={localTime} total={project.pages.length} format={project.format}/>}
     <header className="composition-brand" data-safe>{scene.showLogo ? <div className="brand-lockup"><img src={logo} alt="StatOz"/><span>StatOz<span className="brand-dot">.</span></span></div> : <span/>}<span className="brand-edition">{sports[project.sport].label.toUpperCase()}<i/>{sports[project.sport].symbol}</span></header>
-    {template.visual !== "grand-prix" && <main className="composition-main" style={{ opacity: entry * exit, transform }}>
+    {/* Match stories choreograph their own entrances, so only the exit fade applies; still pages show the settled frame. */}
+    {template.visual === "match-story" && <main className="composition-main" style={{ opacity: exit }}><MatchStoryScene scene={scene} index={index} total={project.pages.length} localTime={isVideo ? localTime : scene.duration} sport={project.sport} media={media} sample={project.sample}/></main>}
+    {template.visual !== "grand-prix" && template.visual !== "gameplay" && template.visual !== "match-story" && <main className="composition-main" style={{ opacity: entry * exit, transform }}>
       <section className="composition-copy" data-safe><div className="eyebrow"><span/>{scene.eyebrow}</div><h1 data-overflow>{scene.headline}</h1><p data-overflow>{scene.body}</p><div className="copy-rule"/></section>
       <section className="composition-art" data-safe>
-        {template.visual === "card" ? <CardArt scene={scene} src={isClip ? undefined : src}/> : template.visual === "match" ? <MatchArt scene={scene} result={project.templateId === "match-result"} media={media}/> : template.visual === "stats" || template.visual === "player" ? <StatsArt scene={scene} comparison={template.visual === "player"}/> : template.visual === "tutorial" ? <div className="tutorial-art"><div className="step-number">0{index + 1}<span>/ 0{project.pages.length}</span></div><div className="tutorial-plate"><div className="step-line"/><span>{index === 0 ? "THE PLAYBOOK" : index === project.pages.length - 1 ? "YOUR NEXT MOVE" : "STEP BY STEP"}</span><SportDiagram sport={project.sport}/></div></div> : <div className="feature-art">{src ? isClip ? <video data-scene-video muted playsInline preload="auto" src={src.src} style={{ objectFit: scene.crop, objectPosition: `${scene.cropX}% ${scene.cropY}%` }}/> : <img src={src.src} alt="" style={{ objectFit: scene.crop, objectPosition: `${scene.cropX}% ${scene.cropY}%` }}/> : <SportDiagram sport={project.sport}/>}<div className="art-shade"/><div className="art-caption"><span>{template.visual === "launch" ? "PITCH DUEL" : "PREDICT. PLAY. COLLECT."}</span><b>↗</b></div><div className="art-index">STATOZ / {sports[project.sport].symbol}</div></div>}
+        {template.visual === "card" ? <CardArt scene={scene} src={isClip ? undefined : src}/> : template.visual === "match" ? <MatchArt scene={scene} result={project.templateId === "match-result"} media={media}/> : template.visual === "stats" ? <StatBreakdownArt scene={scene}/> : template.visual === "player" ? <ComparisonArt scene={scene}/> : template.visual === "tutorial" ? <div className="tutorial-art"><div className="step-number">0{index + 1}<span>/ 0{project.pages.length}</span></div><div className="tutorial-plate"><div className="step-line"/><span>{index === 0 ? "THE PLAYBOOK" : index === project.pages.length - 1 ? "YOUR NEXT MOVE" : "STEP BY STEP"}</span><SportDiagram sport={project.sport}/></div></div> : gameArt && !src ? <div className="game-scene"><GameArt game={gameArt} sport={project.sport}/></div> : <div className="feature-art">{src ? isClip ? <video data-scene-video muted playsInline preload="auto" src={src.src} style={{ objectFit: scene.crop, objectPosition: `${scene.cropX}% ${scene.cropY}%` }}/> : <img src={src.src} alt="" style={{ objectFit: scene.crop, objectPosition: `${scene.cropX}% ${scene.cropY}%` }}/> : <SportDiagram sport={project.sport}/>}<div className="art-shade"/><div className="art-caption"><span>{template.visual === "launch" ? (gameArt ? launchGames[gameArt].label.toUpperCase() : "PITCH DUEL") : "PREDICT. PLAY. COLLECT."}</span><b>↗</b></div><div className="art-index">STATOZ / {sports[project.sport].symbol}</div></div>}
       </section>
     </main>}
     <footer className="composition-footer" data-safe><div>{scene.showCta && <div className="composition-cta"><span>{scene.cta}</span><b>↗</b></div>}<span className="footer-note">{project.sample ? "SAMPLE CONTENT / STATOZ DESIGNER" : "MADE FOR THE LOVE OF THE GAME"}</span></div><div className="page-mark">{project.kind === "image" ? "STZ" : `${String(index + 1).padStart(2, "0")} / ${String(project.pages.length).padStart(2, "0")}`}</div></footer>
