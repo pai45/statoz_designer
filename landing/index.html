@@ -1,0 +1,109 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="StatOz Designer is a local-first content studio for sports images, carousels, videos, and pitch decks.">
+  <title>StatOz Designer — Local-first content studio</title>
+  <link rel="icon" href="favicon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="assets/statoz-tokens.css">
+  <style>
+    @font-face { font-family: "Onest"; src: url("assets/onest-latin-variable.woff2") format("woff2"); font-weight: 100 900; font-display: swap; }
+    @font-face { font-family: "Orbitron"; src: url("assets/orbitron-latin-variable.woff2") format("woff2"); font-weight: 400 900; font-display: swap; }
+    * { box-sizing: border-box; }
+    html { background: var(--ds-color-background-primary); }
+    body { min-width: 320px; margin: 0; color: var(--ds-color-text-default); background: var(--ds-color-background-primary); font-family: var(--ds-font-body); }
+    a { color: inherit; text-decoration: none; }
+    .site { overflow: hidden; min-height: 100vh; background: radial-gradient(circle at 78% 16%, color-mix(in srgb, var(--ds-color-accent-cyan) 13%, transparent), transparent 31rem), linear-gradient(180deg, var(--ds-color-background-muted), var(--ds-color-background-primary) 44rem); }
+    .grid { position: fixed; inset: 0; pointer-events: none; opacity: .22; background-image: linear-gradient(color-mix(in srgb, var(--ds-color-border-muted) 54%, transparent) 1px, transparent 1px), linear-gradient(90deg, color-mix(in srgb, var(--ds-color-border-muted) 54%, transparent) 1px, transparent 1px); background-size: 48px 48px; mask-image: linear-gradient(to bottom, black, transparent 78%); }
+    .wrap { width: min(1120px, calc(100% - 48px)); margin: 0 auto; position: relative; }
+    .nav { min-height: 86px; display: flex; align-items: center; justify-content: space-between; gap: 24px; border-bottom: 1px solid color-mix(in srgb, var(--ds-color-border-muted) 82%, transparent); }
+    .brand { display: inline-flex; align-items: center; gap: 12px; font-family: var(--ds-font-display); font-weight: 700; letter-spacing: var(--ds-tracking-display); font-size: var(--ds-text-sm); }
+    .brand img { width: 32px; height: 32px; object-fit: contain; }
+    .source-link { color: var(--ds-color-text-muted); font-size: var(--ds-text-sm); letter-spacing: var(--ds-tracking-label); }
+    .source-link:hover, .source-link:focus-visible { color: var(--ds-color-text-accent); }
+    .hero { padding: 110px 0 86px; display: grid; grid-template-columns: minmax(0, 1fr) minmax(360px, .82fr); align-items: center; gap: 58px; }
+    .eyebrow { margin: 0 0 20px; color: var(--ds-color-text-accent); font-family: var(--ds-font-display); font-size: var(--ds-text-xs); font-weight: 700; letter-spacing: var(--ds-tracking-mega); }
+    h1 { max-width: 680px; margin: 0; font-family: var(--ds-font-display); font-size: clamp(2.8rem, 6vw, 5.4rem); line-height: .98; letter-spacing: var(--ds-tracking-tight); text-wrap: balance; }
+    h1 em { color: var(--ds-color-text-accent); font-style: normal; }
+    .lead { max-width: 620px; margin: 28px 0 0; color: var(--ds-color-text-subtle); font-size: clamp(1rem, 1.55vw, 1.2rem); line-height: var(--ds-leading-relaxed); }
+    .actions { display: flex; flex-wrap: wrap; gap: 12px; margin-top: 34px; }
+    .action { min-height: 46px; padding: 13px 18px; display: inline-flex; align-items: center; justify-content: center; font-family: var(--ds-font-display); font-size: var(--ds-text-xs); font-weight: 700; letter-spacing: var(--ds-tracking-label); clip-path: var(--ds-clip-field); transition: transform .16s ease, background .16s ease, color .16s ease; }
+    .action:hover { transform: translateY(-1px); }
+    .primary { color: var(--ds-color-text-inverse); background: var(--ds-color-accent-cyan); box-shadow: 0 0 24px color-mix(in srgb, var(--ds-color-accent-cyan) 35%, transparent); }
+    .secondary { color: var(--ds-color-text-default); background: var(--ds-color-background-elevated); outline: 1px solid var(--ds-color-border-default); }
+    .panel { position: relative; isolation: isolate; padding: 23px; clip-path: var(--ds-clip-hud); }
+    .panel::before, .panel::after { content: ""; position: absolute; inset: 0; z-index: -1; clip-path: inherit; }
+    .panel::before { background: var(--ds-color-border-default); }
+    .panel::after { inset: 1px; background: linear-gradient(150deg, color-mix(in srgb, var(--ds-color-background-elevated) 88%, var(--ds-color-accent-cyan)), var(--ds-color-background-secondary) 52%, var(--ds-color-background-muted)); }
+    .panel-label { display: flex; align-items: center; justify-content: space-between; color: var(--ds-color-text-muted); font-family: var(--ds-font-display); font-size: var(--ds-text-2xs); letter-spacing: var(--ds-tracking-ultra); }
+    .status { color: var(--ds-color-success); }
+    .preview { margin-top: 18px; min-height: 285px; padding: 28px; display: flex; flex-direction: column; justify-content: end; overflow: hidden; background: linear-gradient(180deg, transparent, var(--ds-color-background-muted)), url("assets/stadium.png") center / cover; clip-path: var(--ds-clip-panel); }
+    .preview::before { content: ""; position: absolute; inset: 0; background: linear-gradient(110deg, var(--ds-color-background-muted) 3%, transparent 68%); }
+    .preview > * { position: relative; }
+    .preview strong { max-width: 260px; font-family: var(--ds-font-display); font-size: clamp(1.5rem, 3vw, 2.2rem); line-height: 1.1; letter-spacing: var(--ds-tracking-tight); }
+    .preview small { margin-top: 12px; color: var(--ds-color-text-subtle); font-size: var(--ds-text-sm); }
+    .telemetry { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1px; margin-top: 18px; background: var(--ds-color-border-muted); clip-path: var(--ds-clip-panel); }
+    .telemetry div { padding: 13px 10px; background: var(--ds-color-background-secondary); }
+    .telemetry b { display: block; font-family: var(--ds-font-display); font-size: var(--ds-text-base); color: var(--ds-color-text-accent); }
+    .telemetry span { display: block; margin-top: 5px; color: var(--ds-color-text-muted); font-size: var(--ds-text-2xs); letter-spacing: var(--ds-tracking-label); }
+    .section { padding: 30px 0 100px; }
+    .section-head { max-width: 620px; }
+    h2 { margin: 0; font-family: var(--ds-font-display); font-size: clamp(1.6rem, 3vw, 2.5rem); letter-spacing: var(--ds-tracking-tight); }
+    .section-head p { color: var(--ds-color-text-muted); line-height: var(--ds-leading-relaxed); }
+    .feature-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; margin-top: 28px; }
+    .feature { position: relative; isolation: isolate; min-height: 190px; padding: 24px; clip-path: var(--ds-clip-panel); }
+    .feature::before, .feature::after { content: ""; position: absolute; inset: 0; z-index: -1; clip-path: inherit; }
+    .feature::before { background: var(--ds-color-border-muted); }
+    .feature::after { inset: 1px; background: var(--ds-color-background-secondary); }
+    .feature .number { color: var(--ds-color-text-accent); font-family: var(--ds-font-display); font-size: var(--ds-text-xs); letter-spacing: var(--ds-tracking-ultra); }
+    .feature h3 { margin: 42px 0 10px; font-family: var(--ds-font-display); font-size: var(--ds-text-lg); letter-spacing: var(--ds-tracking-label); }
+    .feature p { margin: 0; color: var(--ds-color-text-muted); font-size: var(--ds-text-sm); line-height: var(--ds-leading-relaxed); }
+    .local-note { display: grid; grid-template-columns: auto 1fr; gap: 18px; align-items: center; padding: 24px; background: color-mix(in srgb, var(--ds-color-accent-cyan) 7%, var(--ds-color-background-secondary)); border-left: 2px solid var(--ds-color-accent-cyan); }
+    .local-note strong { font-family: var(--ds-font-display); font-size: var(--ds-text-sm); letter-spacing: var(--ds-tracking-label); }
+    .local-note p { margin: 6px 0 0; color: var(--ds-color-text-muted); font-size: var(--ds-text-sm); line-height: var(--ds-leading-relaxed); }
+    code { padding: 4px 7px; color: var(--ds-color-text-accent); background: var(--ds-color-background-muted); font-family: var(--ds-font-mono); font-size: .85em; }
+    footer { padding: 28px 0 42px; color: var(--ds-color-text-muted); border-top: 1px solid var(--ds-color-border-muted); font-size: var(--ds-text-xs); }
+    @media (max-width: 760px) { .wrap { width: min(100% - 32px, 620px); } .nav { min-height: 70px; } .hero { padding: 72px 0 64px; grid-template-columns: 1fr; gap: 40px; } .feature-grid { grid-template-columns: 1fr; } .preview { min-height: 245px; } .local-note { grid-template-columns: 1fr; } }
+  </style>
+</head>
+<body>
+  <main class="site">
+    <div class="grid" aria-hidden="true"></div>
+    <div class="wrap">
+      <nav class="nav" aria-label="Primary navigation">
+        <a class="brand" href="./" aria-label="StatOz Designer home"><img src="assets/logo.png" alt="">STATOZ DESIGNER</a>
+        <a class="source-link" href="https://github.com/pai45/statoz_designer">VIEW SOURCE ↗</a>
+      </nav>
+      <section class="hero">
+        <div>
+          <p class="eyebrow">LOCAL-FIRST CONTENT STUDIO</p>
+          <h1>Make every sports story <em>land.</em></h1>
+          <p class="lead">Build brand-led social images, carousels, short videos, app creatives, match stories and investor pitch decks in one local StatOz workspace.</p>
+          <div class="actions">
+            <a class="action primary" href="https://github.com/pai45/statoz_designer">GET THE STUDIO ↗</a>
+            <a class="action secondary" href="#run-locally">RUN LOCALLY</a>
+          </div>
+        </div>
+        <aside class="panel" aria-label="Studio overview">
+          <div class="panel-label"><span>STUDIO / READY</span><span class="status">● LOCAL</span></div>
+          <div class="preview"><strong>Your next big moment.</strong><small>Preview and export share one deterministic composition.</small></div>
+          <div class="telemetry" aria-label="Studio capabilities"><div><b>04</b><span>RATIOS</span></div><div><b>30</b><span>FPS VIDEO</span></div><div><b>01</b><span>LOCAL STUDIO</span></div></div>
+        </aside>
+      </section>
+      <section class="section">
+        <div class="section-head"><p class="eyebrow">ONE CRAFT, MANY FORMATS</p><h2>From fixture to finished frame.</h2><p>StatOz Designer keeps the creative workflow local: project data, registered media, previews and export jobs stay in your workspace.</p></div>
+        <div class="feature-grid">
+          <article class="feature"><span class="number">01 / COMPOSE</span><h3>Story-led layouts</h3><p>Start with dedicated image, carousel, video, app-store and pitch templates.</p></article>
+          <article class="feature"><span class="number">02 / PREVIEW</span><h3>One renderer</h3><p>Every preview uses the same composition as the final export, at the selected ratio.</p></article>
+          <article class="feature"><span class="number">03 / EXPORT</span><h3>Built to share</h3><p>Create stills, ZIP carousels, MP4s and flattened pitch-deck files from saved projects.</p></article>
+        </div>
+      </section>
+      <section class="section" id="run-locally">
+        <div class="local-note"><strong>RUN THE FULL STUDIO LOCALLY</strong><p>GitHub Pages hosts this static landing only. To create projects, import media, render exports or use the local worker, clone the repository and run <code>npm install</code>, then <code>npm run dev</code>.</p></div>
+      </section>
+      <footer>© StatOz Designer · Sample content and figures are illustrative. This landing is a static project introduction.</footer>
+    </div>
+  </main>
+</body>
+</html>
