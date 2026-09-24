@@ -3,7 +3,7 @@ import { useEffect, useState } from "react";
 import type { Player } from "@/domain/player";
 import { sports, type Asset, type Scene, type Sport } from "@/domain/project";
 import { Button, Icon, InputField } from "@/design-system/components/ui";
-import { api } from "@/shared/api";
+import { api, apiResource } from "@/shared/api";
 
 const emptyCard = { playerId: "", position: "", club: "", nation: "" };
 const boundedRating = (value: string) => { const parsed = Number(value); return Number.isFinite(parsed) ? Math.max(0, Math.min(100, Math.round(parsed))) : 0; };
@@ -45,7 +45,7 @@ export function PlayerPicker({ scene, sport, assets, onChange, notify }: { scene
       {!query.trim() ? <p className="muted-note">Start typing to search the local player library.</p> : searching && !results.length ? <p className="muted-note">Searching your library…</p> : results.length === 0 ? <p className="muted-note">No player matches that search. Build this card by hand, then save it to the library.</p> : results.slice(0, 8).map(player => {
         const portrait = assets.find(a => a.id === player.portraitAssetId);
         return <button key={player.id} className={`player-result ${linked?.playerId === player.id ? "selected" : ""}`} onClick={() => apply(player)}>
-          <span className="player-face">{portrait ? <img src={`/api/assets/${portrait.id}`} alt=""/> : <Icon name="image" size={14}/>}</span>
+          <span className="player-face">{portrait ? <img src={apiResource(`assets/${portrait.id}`)} alt=""/> : <Icon name="image" size={14}/>}</span>
           <span className="player-copy"><strong>{player.name}</strong><small>{[player.position, player.club, player.nation].filter(Boolean).join(" · ") || sports[player.sport].label}</small></span>
           <span className="player-rating">{player.rating}</span>
         </button>;

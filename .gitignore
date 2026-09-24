@@ -5,6 +5,7 @@ storage/
 build/
 test-results/
 output/
+/pages-site/out/
 tmp/
 .codex-build/
 .chart-data-*/

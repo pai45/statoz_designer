@@ -1,6 +1,7 @@
 "use client";
 import { useState } from "react";
 import { isLineArt, sports, type Asset, type Scene, type Sport } from "@/domain/project";
+import { apiResource } from "@/shared/api";
 
 /**
  * Picks a piece of line art as the scene backdrop. It writes the same
@@ -33,7 +34,7 @@ export function LineArtPicker({ assets, scene, sport, onChange }: {
         className={art.id === scene.assetId ? "selected" : ""}
         title={`${art.name}${art.sport ? ` · ${sports[art.sport].label}` : ""}`}
         onClick={() => choose(art.id)}
-      ><img src={`/api/assets/${art.id}`} alt={art.name}/><span>{art.name}</span></button>)}
+      ><img src={apiResource(`assets/${art.id}`)} alt={art.name}/><span>{art.name}</span></button>)}
     </div>
     {!shown.length && <p className="muted-note">No line art for {sports[sport].label}. Show every sport to see the rest.</p>}
     <label className="toggle-row"><span>Show every sport</span><input type="checkbox" checked={everySport} onChange={e => setEverySport(e.target.checked)}/></label>

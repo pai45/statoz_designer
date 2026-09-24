@@ -15,14 +15,32 @@ npm run doctor
 npm run dev
 ```
 
-Open **http://127.0.0.1:3000**. The launcher starts Next.js, one persistent render
-worker, and the posting window process. `PORT` changes the local port. Stop with Ctrl+C.
+The launcher prints a connection URL such as **http://127.0.0.1:3000/connect**.
+Open it to pair the full Studio at
+**https://pai45.github.io/statoz_designer/**. The launcher starts the loopback-only
+Next.js companion, one persistent render worker, the assistant process, and the posting
+window process. `PORT` changes the local port; always use the printed connection URL
+when it does. Stop with Ctrl+C.
+
+The GitHub Pages site contains only the browser interface. Projects, assets, player
+records, render inputs, exports, Chromium and FFmpeg remain in local `storage` and are
+never uploaded to GitHub. Pairing is one-use and expires after two minutes. The tab
+holds its signed session only in memory, so refreshes and new tabs reconnect through
+the printed `/connect` link. Chrome or Edge may ask permission to reach devices on the
+local network; allow it for the loopback companion. Firefox is also supported. Safari
+is unsupported because it can block an HTTPS page from reaching an HTTP loopback app.
+
+If the companion is stopped or a session ends, the hosted UI returns to the connection
+screen. Restart the launcher and open `/connect` again. The direct recovery and
+development UI remains available at **http://127.0.0.1:3000**.
 
 FFmpeg is resolved from `FFMPEG_PATH`, PATH, or Python's `imageio_ffmpeg` package.
 Set `PYTHON_PATH` if Python is not on PATH. Set `CHROMIUM_PATH` to use an existing
 compatible Chromium executable. No AI API keys or sibling checkouts are required.
 
-For a production build: `npm run build`, then `npm start`.
+For a production companion: `npm run build`, then `npm start`. To verify the static
+GitHub Pages application locally, run `npm run build:pages`; its output is
+`pages-site/out`.
 
 ## Create
 

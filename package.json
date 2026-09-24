@@ -6,6 +6,7 @@
   "scripts": {
     "dev": "node scripts/studio.mjs dev",
     "build": "node scripts/build-compositions.mjs && next build",
+    "build:pages": "node scripts/build-pages.mjs",
     "start": "node scripts/studio.mjs start",
     "worker": "tsx src/server/worker.ts",
     "publisher": "tsx src/server/publisher.ts",

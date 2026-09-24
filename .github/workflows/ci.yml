@@ -42,3 +42,6 @@ jobs:
 
       - name: Build
         run: npm run build
+
+      - name: Build GitHub Pages Studio
+        run: npm run build:pages

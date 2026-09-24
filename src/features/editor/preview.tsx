@@ -2,14 +2,15 @@
 import { useEffect, useRef, useState } from "react";
 import { formats, type Asset, type Project } from "@/domain/project";
 import { Composition } from "@/features/compositions/composition";
+import { apiFetch, apiResource, publicAsset } from "@/shared/api";
 
 export function Thumbnail({ project, assets, pageIndex = 0, className = "" }: { project: Project; assets: Asset[]; pageIndex?: number; className?: string }) {
   const box = useRef<HTMLDivElement>(null);
   const [size, setSize] = useState({ width: 300, height: 280 });
   useEffect(() => { const observer = new ResizeObserver(([entry]) => setSize({ width: entry.contentRect.width, height: entry.contentRect.height })); if (box.current) observer.observe(box.current); return () => observer.disconnect(); }, []);
   const d = formats[project.format], scale = Math.min(size.width / d.width, size.height / d.height);
-  const media = Object.fromEntries(assets.map(a => [a.id, { src: `/api/assets/${a.id}`, mime: a.mime }]));
-  return <div ref={box} className={`thumbnail ${className}`}><div style={{ width: d.width * scale, height: d.height * scale }}><div style={{ width: d.width, height: d.height, transform: `scale(${scale})`, transformOrigin: "0 0", pointerEvents: "none" }}><Composition project={project} media={media} pageIndex={pageIndex}/></div></div></div>;
+  const media = Object.fromEntries(assets.map(a => [a.id, { src: apiResource(`assets/${a.id}`), mime: a.mime }]));
+  return <div ref={box} className={`thumbnail ${className}`}><div style={{ width: d.width * scale, height: d.height * scale }}><div style={{ width: d.width, height: d.height, transform: `scale(${scale})`, transformOrigin: "0 0", pointerEvents: "none" }}><Composition project={project} media={media} logo={publicAsset("/assets/brand/logo.png")} pageIndex={pageIndex}/></div></div></div>;
 }
 
 export function Preview({ project, time, pageIndex, guides, zoom, onOverflow }: { project: Project; time: number; pageIndex: number; guides: boolean; zoom: number; onOverflow: (messages: string[]) => void }) {
@@ -31,7 +32,7 @@ export function Preview({ project, time, pageIndex, guides, zoom, onOverflow }: 
     async function load() {
       setLoading(true); setError("");
       try {
-        const response = await fetch("/api/preview", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ project: live.current.project, pageIndex: live.current.pageIndex }), signal: abort.signal });
+        const response = await apiFetch("preview", { method: "POST", body: JSON.stringify({ project: live.current.project, pageIndex: live.current.pageIndex }), signal: abort.signal });
         if (!response.ok) throw new Error((await response.json()).error);
         setHtml(await response.text());
       } catch (e) { if (!abort.signal.aborted) { setError((e as Error).message); setLoading(false); } }

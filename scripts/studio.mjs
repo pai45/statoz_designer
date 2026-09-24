@@ -1,10 +1,13 @@
 import { spawn } from 'node:child_process';
 const mode = process.argv[2] === 'start' ? 'start' : 'dev';
+const port = process.env.PORT || '3000';
 const children = [];
 const worker = spawn(process.execPath, ['--import', 'tsx', 'src/server/worker.ts'], { stdio: 'inherit', windowsHide: true });
 children.push(worker);
-const app = spawn(process.execPath, ['node_modules/next/dist/bin/next', mode, '--hostname', '127.0.0.1', '--port', process.env.PORT || '3000'], { stdio: 'inherit', windowsHide: true });
+const app = spawn(process.execPath, ['node_modules/next/dist/bin/next', mode, '--hostname', '127.0.0.1', '--port', port], { stdio: 'inherit', windowsHide: true });
 children.push(app);
+console.log(`\nStatOz local companion: http://127.0.0.1:${port}/connect`);
+console.log('Open that link to pair the GitHub Pages Studio. Files stay on this computer.\n');
 const publisher = spawn(process.execPath, ['--import', 'tsx', 'src/server/publisher.ts'], { stdio: 'inherit', windowsHide: true });
 children.push(publisher);
 publisher.on('exit', code => { if (!stopping) console.error(`Posting window process exited (code ${code}). Exports still work; restart the studio to post to social.`); });

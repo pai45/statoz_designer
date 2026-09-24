@@ -1,8 +1,15 @@
 # Architecture
 
-Next.js App Router with a separate Node render worker and a posting window process.
-`npm run dev` and `npm start` supervise all three. The UI talks to Node route handlers
-over loopback.
+The product has two shells around the same Studio feature tree. The local Next.js App
+Router shell provides the direct recovery/development UI and all route handlers. A
+separate static-export shell under `pages-site` publishes the full browser UI at the
+repository's GitHub Pages base path. It has no server routes and sends no workspace data
+to GitHub. Both shells use the same editor, templates, compositions, design system and
+CSS, so preview and export continue to share one renderer.
+
+The local companion supervises Next.js, a separate Node render worker, the assistant
+process and a posting window process. Every process with an HTTP surface binds to
+`127.0.0.1`; `npm run dev` and `npm start` print the companion's `/connect` URL.
 
 - `app`: route/layout shell and local HTTP endpoints.
 - `features`: studio, editor, template registry, and React compositions.
@@ -10,6 +17,7 @@ over loopback.
 - `domain`: shared project/asset/job types, schemas, and timing rules.
 - `shared`: non-visual browser utilities.
 - `server`: persistence, media handling, composition bundling, queue, rendering.
+- `pages-site`: static GitHub Pages shell and export configuration.
 
 No source checkout, hosted AI service, social network, or database is required at
 runtime. Assistant runs call a locally installed CLI only when the user starts one.
@@ -19,6 +27,23 @@ corresponding workspace or control is opened. Active user-started runs may poll 
 for their own completion. Imported media is immutable and cacheable by asset ID.
 
 ## Local interfaces
+
+`GET /connect` creates a cryptographically random one-use nonce with a two-minute
+lifetime and redirects to the Pages URL. Its fragment carries only that nonce and the
+validated loopback origin, then the browser removes the fragment from history.
+
+- GET `/api/connection`: nonsensitive readiness information.
+- POST `/api/session`: consumes the one-use pairing nonce and returns a signed,
+  time-limited bearer session.
+- GET `/api/session/media-token`: returns a separate signed read-only token used only
+  by asset, brand-kit, export-poster and export-file GET routes.
+- OPTIONS `/api/*`: exact-origin CORS and browser private-network preflights.
+
+Requests from `https://pai45.github.io` require bearer authorization except the
+readiness and pairing endpoints. Cross-origin media URLs require the scoped media token.
+The companion accepts no other remote origin. Localhost same-origin behavior remains
+available, and every request must carry a loopback Host header; LAN and public binding
+are rejected.
 
 - GET/POST `/api/projects`; GET/PUT/DELETE `/api/projects/:id`. PUT and DELETE
   require `If-Match` with the SHA-256 ETag of the exact source JSON; mismatches
@@ -63,7 +88,8 @@ for their own completion. Imported media is immutable and cacheable by asset ID.
 - GET `/api/publish-options/:jobId`: per-platform compatibility and default caption.
 - GET/PUT `/api/publish-settings`; POST `/api/publish-login/:platform` opens sign-in.
 
-Mutations validate Host and same-origin Origin. IDs are constrained. Media paths
+Local mutations validate Host and same-origin Origin. Pages mutations validate the
+exact Pages origin and its bearer session. IDs are constrained. Media paths
 are resolved through realpath and must remain inside managed asset roots. Remote
 assets and executable uploads are excluded. Media uploads are capped at 150 MB.
 

@@ -3,7 +3,7 @@ import type { BrandKitItem } from "@/domain/brand-guide";
 import { assetCategoryLabels, assetCategoryOf, sortAssetsForCategory } from "@/domain/asset-library";
 import type { Asset, AssetCategory } from "@/domain/project";
 import { Button, FilterChips, Icon, Tag } from "@/design-system/components/ui";
-import { api, readableBytes } from "@/shared/api";
+import { api, apiResource, readableBytes } from "@/shared/api";
 import "./brand-library.css";
 
 export const assetTabs = ["Uploads", "Product captures", "Player portraits", "Team crests", "News photos", "Line art", "Audio & video", "Design kit"] as const;
@@ -24,9 +24,9 @@ function AssetCard({ asset, onChanged, notify }: { asset: Asset; onChanged?: () 
   const category = assetCategoryOf(asset);
   return <article className="asset-card">
     <div className="asset-visual">
-      {asset.mime.startsWith("image/") ? <img src={`/api/assets/${asset.id}`} alt={asset.name} loading="lazy"/>
-        : asset.mime.startsWith("video/") ? <video controls src={`/api/assets/${asset.id}`} preload="metadata"/>
-          : <div className="audio-asset"><Icon name="play" size={30}/><audio controls src={`/api/assets/${asset.id}`} preload="metadata"/></div>}
+      {asset.mime.startsWith("image/") ? <img src={apiResource(`assets/${asset.id}`)} alt={asset.name} loading="lazy"/>
+        : asset.mime.startsWith("video/") ? <video controls src={apiResource(`assets/${asset.id}`)} preload="metadata"/>
+          : <div className="audio-asset"><Icon name="play" size={30}/><audio controls src={apiResource(`assets/${asset.id}`)} preload="metadata"/></div>}
     </div>
     <div className="asset-info">
       <h3>{asset.name}</h3>
@@ -63,7 +63,7 @@ function DesignKit({ search }: { search: string }) {
       : <div className="design-kit-grid">{visible.map(item => <article className="design-kit-card" key={item.id}>
         <div className="design-kit-format">{item.format}</div>
         <div><h3>{item.name}</h3><span>{item.fileName} · {readableBytes(item.bytes)}</span><p>{item.description}</p></div>
-        <a className="button button-secondary" href={`/api/brand-kit/${item.id}`} download={item.fileName}><Icon name="download" size={16}/>Download</a>
+        <a className="button button-secondary" href={apiResource(`brand-kit/${item.id}`)} download={item.fileName}><Icon name="download" size={16}/>Download</a>
       </article>)}</div>}
   </>;
 }

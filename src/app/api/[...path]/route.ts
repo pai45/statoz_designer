@@ -15,16 +15,9 @@ import { doctor, pngMetadata, probeMedia, svgDimensions } from "@/server/runtime
 import { soundtrackSfx } from "@/server/audio";
 import { listBrandKit, readBrandKitFile } from "@/server/brand-kit";
 import { applyInvestorReview, cancelInvestorReview, createInvestorReview, retryInvestorReview } from "@/server/investor/queue";
+import { authorizeApiRequest, connectionApi, preflight, withCors } from "@/server/connection";
 
 type Context = { params: Promise<{ path: string[] }> };
-function checkOrigin(req: NextRequest) {
-  const host = req.headers.get("host")?.split(":")[0];
-  if (host !== "127.0.0.1" && host !== "localhost") throw new StudioError("This studio is available on localhost only.", 403);
-  if (req.method !== "GET" && req.method !== "HEAD") {
-    const origin = req.headers.get("origin");
-    if (!origin || new URL(origin).host !== req.headers.get("host")) throw new StudioError("Local same-origin requests are required.", 403);
-  }
-}
 async function serveFile(req: NextRequest, file: string, mime: string, downloadName?: string, cacheControl = "no-store") {
   const data = await fs.readFile(file);
   const headers: Record<string, string> = { "Content-Type": mime, "Cache-Control": cacheControl, "Accept-Ranges": "bytes", "X-Content-Type-Options": "nosniff" };
@@ -40,10 +33,15 @@ async function serveFile(req: NextRequest, file: string, mime: string, downloadN
   }
   return new Response(new Uint8Array(data), { headers: { ...headers, "Content-Length": String(data.length) } });
 }
-async function handle(req: NextRequest, context: Context): Promise<Response> {
+async function dispatch(req: NextRequest, context: Context): Promise<Response> {
   try {
-    checkOrigin(req); await initialize();
-    const [resource, id, action] = (await context.params).path;
+    const route = (await context.params).path;
+    const pathname = `/api/${route.join("/")}`;
+    await authorizeApiRequest(req, pathname);
+    const connection = await connectionApi(req, pathname);
+    if (connection) return connection;
+    await initialize();
+    const [resource, id, action] = route;
     const method = req.method;
     if (resource === "config" && method === "GET") return Response.json({ templates, formats, projectFolder: path.join(dataRoot, "projects") });
     if (resource === "doctor" && method === "GET") return Response.json(await doctor());
@@ -190,6 +188,16 @@ async function handle(req: NextRequest, context: Context): Promise<Response> {
   } catch (error) {
     const status = error instanceof StudioError ? error.status : error instanceof z.ZodError ? 400 : (error as NodeJS.ErrnoException).code === "ENOENT" ? 404 : 500;
     return Response.json({ error: (error as Error).message }, { status });
+  }
+}
+async function handle(req: NextRequest, context: Context) {
+  return withCors(req, await dispatch(req, context));
+}
+export async function OPTIONS(req: NextRequest) {
+  try { return preflight(req); }
+  catch (error) {
+    const status = error instanceof StudioError ? error.status : 400;
+    return withCors(req, Response.json({ error: (error as Error).message }, { status }));
   }
 }
 export const GET = handle;

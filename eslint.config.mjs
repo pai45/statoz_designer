@@ -3,5 +3,5 @@ import nextVitals from "eslint-config-next/core-web-vitals";
 import nextTs from "eslint-config-next/typescript";
 export default defineConfig([...nextVitals, ...nextTs,
   { rules: { "@next/next/no-img-element": "off" } },
-  globalIgnores([".next/**", ".studio/**", "storage/**", "build/**", "test-results/**", "vendor/**", "next-env.d.ts"]),
+  globalIgnores([".next/**", "pages-site/.next/**", "pages-site/out/**", ".studio/**", "storage/**", "build/**", "test-results/**", "vendor/**", "next-env.d.ts"]),
 ]);

@@ -3,6 +3,7 @@ import { actionCatalog, actionHierarchy, actionStates, elementCatalog, type Cata
 import { ActionButton, ActionChip, ActionLink, ControlPad, DialogActions, FuseCta, HeroCta, IconButton, PagerButton, SelectableTile, Stepper } from "@/design-system/components/actions";
 import { AccentPanel, Badge, DeltaChip, Progress, SignalPanel, StatusPill, StepMeter, UnderlineTabs } from "@/design-system/components/elements";
 import { Icon } from "@/design-system/components/ui";
+import { apiResource } from "@/shared/api";
 
 /**
  * Live specimens for the Brand tab's Actions and Components sections. Each
@@ -58,7 +59,7 @@ export const catalogDemos: Record<string, () => ReactNode> = {
     <Row label="STATES"><ActionButton disabled>Disabled</ActionButton><ActionButton pending>Saving</ActionButton><ActionButton variant="tonal" accent={danger} leadingIcon={<Icon name="trash" size={16}/>}>Delete</ActionButton></Row>
     <Row label="ACCENTS"><ActionButton accent={accent("gold")}>Claim reward</ActionButton><ActionButton variant="tonal" accent={accent("lime")}>Lock pick</ActionButton><ActionButton variant="tonal" accent={accent("racing")}>Race</ActionButton><ActionButton variant="tonal" accent={accent("violet")}>Elite</ActionButton></Row>
   </>,
-  "action-link": () => <Row label="LINKS"><ActionLink href="/api/brand-kit/logo" download="statoz-logo.png" variant="tonal" leadingIcon={<Icon name="download" size={16}/>}>Download the mark</ActionLink><ActionLink href="#top" variant="ghost" trailingIcon={<Icon name="arrow" size={16}/>}>View all</ActionLink></Row>,
+  "action-link": () => <Row label="LINKS"><ActionLink href={apiResource("brand-kit/logo")} download="statoz-logo.png" variant="tonal" leadingIcon={<Icon name="download" size={16}/>}>Download the mark</ActionLink><ActionLink href="#top" variant="ghost" trailingIcon={<Icon name="arrow" size={16}/>}>View all</ActionLink></Row>,
   "hero-cta": () => <div className="catalog-stack">
     <HeroCta label="PLAY MATCH" helper="Squad ready · 5 cards" onClick={noop}/>
     <HeroCta label="HOLD TO LOCK" helper="Press and hold" pressedLabel="RELEASE TO LOCK" pressedHelper="Releases at 72% power" accent={accent("lime")} glow={false} onPressStart={noop} onPressEnd={noop} onPressCancel={noop}/>

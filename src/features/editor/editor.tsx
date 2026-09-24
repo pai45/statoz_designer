@@ -4,7 +4,7 @@ import { durationOf, formats, isLineArt, launchGames, sceneAt, sports, type Asse
 import { briefFor } from "@/domain/brief";
 import { Button, Icon, InputField, Tag } from "@/design-system/components/ui";
 import { templateFor } from "@/features/templates/registry";
-import { api } from "@/shared/api";
+import { api, apiFetch, apiResource } from "@/shared/api";
 import { LineArtPicker } from "./line-art-picker";
 import { AssistantPanel } from "./assistant-panel";
 import { BriefAdvancedControls } from "./brief-advanced-controls";
@@ -69,7 +69,7 @@ export function Editor({ initial, assets, onClose, onOpen, onExports, onAssetsCh
     const abort = new AbortController(); let url = "";
     const timer = setTimeout(async () => {
       try {
-        const response = await fetch("/api/audio-preview", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(sfxProject.current), signal: abort.signal });
+        const response = await apiFetch("audio-preview", { method: "POST", body: JSON.stringify(sfxProject.current), signal: abort.signal });
         if (!response.ok) return;
         const blob = await response.blob(); if (abort.signal.aborted) return;
         url = URL.createObjectURL(blob); setSfxUrl(url);
@@ -140,7 +140,7 @@ export function Editor({ initial, assets, onClose, onOpen, onExports, onAssetsCh
       {panel === "Audio" && <><div className="section-caption">SOUNDTRACK</div><label className="toggle-row"><span>Silent export</span><input type="checkbox" checked={project.audio.silent} onChange={e => edit(p => ({ ...p, audio: { ...p.audio, silent: e.target.checked } }))}/></label><label className="toggle-row"><span>Original transition SFX</span><input type="checkbox" disabled={project.audio.silent} checked={project.audio.sfx} onChange={e => edit(p => ({ ...p, audio: { ...p.audio, sfx: e.target.checked } }))}/></label><label className="field"><span>Music or voiceover</span><select disabled={project.audio.silent} value={project.audio.assetId} onChange={e => edit(p => ({ ...p, audio: { ...p.audio, assetId: e.target.value } }))}><option value="">No audio track</option>{assets.filter(a => a.mime.startsWith("audio/")).map(a => <option key={a.id} value={a.id}>{a.name}</option>)}</select></label><label className="field"><span>Track volume · {Math.round(project.audio.gain * 100)}%</span><input type="range" min={0} max={1} step={.01} value={project.audio.gain} onChange={e => edit(p => ({ ...p, audio: { ...p.audio, gain: +e.target.value } }))}/></label><p className="muted-note">Audio starts at zero and is padded or trimmed to the video. Uploaded tracks and original transition SFX play in the preview and export.</p></>}
       {panel === "Brief" && <><div className="section-caption">TEMPLATE BRIEF</div><label className="field"><span>Objective</span><textarea rows={5} value={project.brief.objective} onChange={e => edit(p => ({ ...p, brief: { ...p.brief, objective: e.target.value } }))}/></label><InputField label="Audience" value={project.brief.audience} onChange={e => edit(p => ({ ...p, brief: { ...p.brief, audience: e.target.value } }))}/><AssistantPanel projectId={project.id} projectName={project.name} focusPageId={scene.id} focusLabel={`${isVideo ? "Scene" : "Page"} ${visibleIndex + 1}`} isVideo={isVideo} blockedReason={assistantBlocked} onCompleted={editor.reload} notify={notify}/><BriefAdvancedControls project={project} scene={scene} assets={assets} isPitch={isPitch} isVideo={isVideo} total={total} onProjectChange={edit} onSceneChange={updateScene} onCopyBrief={() => void copyBrief()}/></>}
     </div><div className="inspector-footer"><Icon name="brand" size={16}/><span>Built on the StatOz design system</span></div></></aside></div>
-    {project.audio.assetId && <audio ref={audio} src={`/api/assets/${project.audio.assetId}`} preload="metadata"/>}
+    {project.audio.assetId && <audio ref={audio} src={apiResource(`assets/${project.audio.assetId}`)} preload="metadata"/>}
     {sfxUrl && <audio ref={sfxAudio} src={sfxUrl} preload="auto"/>}
     {matchPicker && <MatchPicker mode="fill" story={template.visual === "match-story"} projectId={project.id} pageIndex={visibleIndex} notify={notify}
       onClose={() => setMatchPicker(false)}
