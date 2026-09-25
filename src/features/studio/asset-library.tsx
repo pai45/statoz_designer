@@ -20,13 +20,13 @@ const tabCategories: Record<Exclude<AssetTab, "Design kit">, AssetCategory> = {
   "Audio & video": "audio-video",
 };
 
-function AssetCard({ asset, onChanged, notify }: { asset: Asset; onChanged?: () => void; notify?: (message: string) => void }) {
+function AssetCard({ asset, onChanged, notify, resourceUrl = asset => apiResource(`assets/${asset.id}`) }: { asset: Asset; onChanged?: () => void; notify?: (message: string) => void; resourceUrl?: (asset: Asset) => string }) {
   const category = assetCategoryOf(asset);
   return <article className="asset-card">
     <div className="asset-visual">
-      {asset.mime.startsWith("image/") ? <img src={apiResource(`assets/${asset.id}`)} alt={asset.name} loading="lazy"/>
-        : asset.mime.startsWith("video/") ? <video controls src={apiResource(`assets/${asset.id}`)} preload="metadata"/>
-          : <div className="audio-asset"><Icon name="play" size={30}/><audio controls src={apiResource(`assets/${asset.id}`)} preload="metadata"/></div>}
+      {asset.mime.startsWith("image/") ? <img src={resourceUrl(asset)} alt={asset.name} loading="lazy"/>
+        : asset.mime.startsWith("video/") ? <video controls src={resourceUrl(asset)} preload="metadata"/>
+          : <div className="audio-asset"><Icon name="play" size={30}/><audio controls src={resourceUrl(asset)} preload="metadata"/></div>}
     </div>
     <div className="asset-info">
       <h3>{asset.name}</h3>
@@ -45,9 +45,9 @@ function AssetCard({ asset, onChanged, notify }: { asset: Asset; onChanged?: () 
   </article>;
 }
 
-export function AssetGrid({ assets, onChanged, notify, empty }: { assets: Asset[]; onChanged?: () => void; notify?: (message: string) => void; empty: string }) {
+export function AssetGrid({ assets, onChanged, notify, empty, resourceUrl }: { assets: Asset[]; onChanged?: () => void; notify?: (message: string) => void; empty: string; resourceUrl?: (asset: Asset) => string }) {
   if (!assets.length) return <div className="empty-state library-empty"><Icon name="image" size={34}/><h2>Nothing here yet.</h2><p>{empty}</p></div>;
-  return <div className="asset-grid">{assets.map(asset => <AssetCard key={asset.id} asset={asset} onChanged={onChanged} notify={notify}/>)}</div>;
+  return <div className="asset-grid">{assets.map(asset => <AssetCard key={asset.id} asset={asset} onChanged={onChanged} notify={notify} resourceUrl={resourceUrl}/>)}</div>;
 }
 
 /** The files someone needs to work in the StatOz style outside the studio. */

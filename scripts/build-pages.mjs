@@ -16,11 +16,15 @@ await new Promise((resolve, reject) => {
   build.on("exit", code => code === 0 ? resolve() : reject(new Error(`Pages build exited with code ${code}.`)));
 });
 
-await mkdir(path.join(output, "assets", "brand"), { recursive: true });
-await cp(
-  path.join(root, "public", "assets", "brand", "logo.png"),
-  path.join(output, "assets", "brand", "logo.png"),
-);
+const publicAllowlist = [
+  ["assets/brand/logo.png", "assets/brand/logo.png"],
+  ["assets/library/stadium.png", "assets/library/stadium.png"],
+  ["assets/library/arena.png", "assets/library/arena.png"],
+];
+for (const [source, target] of publicAllowlist) {
+  await mkdir(path.dirname(path.join(output, target)), { recursive: true });
+  await cp(path.join(root, "public", source), path.join(output, target));
+}
 await writeFile(path.join(output, ".nojekyll"), "");
 
 console.log(`Static Studio ready at ${path.relative(root, output)}`);

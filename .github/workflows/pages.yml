@@ -7,9 +7,12 @@ on:
       - pages-site/**
       - src/**
       - scripts/build-pages.mjs
+      - scripts/verify-pages-demo.ts
       - package.json
       - package-lock.json
       - public/assets/brand/logo.png
+      - public/assets/library/stadium.png
+      - public/assets/library/arena.png
       - .github/workflows/pages.yml
   workflow_dispatch:
 
@@ -41,8 +44,14 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
+      - name: Install demo browser
+        run: npx playwright install --with-deps chromium
+
       - name: Build static Studio
         run: npm run build:pages
+
+      - name: Verify read-only demo
+        run: npm run test:pages-demo
 
       - name: Upload GitHub Pages artifact
         uses: actions/upload-pages-artifact@v4

@@ -2,10 +2,21 @@
 
 The product has two shells around the same Studio feature tree. The local Next.js App
 Router shell provides the direct recovery/development UI and all route handlers. A
-separate static-export shell under `pages-site` publishes the full browser UI at the
+separate static-export shell under `pages-site` publishes the browser UI at the
 repository's GitHub Pages base path. It has no server routes and sends no workspace data
-to GitHub. Both shells use the same editor, templates, compositions, design system and
-CSS, so preview and export continue to share one renderer.
+to GitHub. Without a valid local session it renders `DemoStudio`, a structurally read-only
+viewer for public templates, video compositions, three allowlisted assets, the complete
+brand guide, and the checked-in 12-slide investor deck. With a valid session it renders
+the full `Studio`. Both shells use the same templates, compositions, design system and
+CSS, so demo playback, editor preview and export continue to share one renderer.
+
+Demo projects are created from the template registry, then normalized to stable project
+IDs, page IDs and timestamps so the static shell hydrates deterministically. Video time
+is supplied to `Composition` by `requestAnimationFrame`; there is no demo-only renderer.
+Ordinary demo navigation performs no `/api` or loopback requests. The Pages build script
+copies only `logo.png`, `stadium.png`, and `arena.png` from an explicit allowlist. It never
+copies `storage`, render output, imported media, credentials, or browser profiles. Editing
+and mutation features are omitted from the demo component tree rather than disabled.
 
 The local companion supervises Next.js, a separate Node render worker, the assistant
 process and a posting window process. Every process with an HTTP surface binds to

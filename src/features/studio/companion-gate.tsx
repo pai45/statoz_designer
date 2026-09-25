@@ -1,12 +1,11 @@
 "use client";
 import { useCallback, useEffect, useRef, useState } from "react";
-import { Button, Icon, Tag } from "@/design-system/components/ui";
-import { ApiError, api, configureApi, publicAsset, resetApi, validateLoopbackApi } from "@/shared/api";
+import { ApiError, api, configureApi, resetApi, validateLoopbackApi } from "@/shared/api";
+import { DemoStudio, type DemoConnectionState } from "./demo-studio";
 import { Studio } from "./studio";
-import "./companion.css";
 
 type TokenResponse = { token: string; expiresAt: string };
-type State = "disconnected" | "connecting" | "connected" | "expired" | "error";
+type State = DemoConnectionState | "connected";
 
 export function CompanionGate() {
   const [state, setState] = useState<State>("disconnected");
@@ -41,22 +40,5 @@ export function CompanionGate() {
 
   if (state === "connected") return <Studio/>;
   const openCompanion = () => window.location.assign("http://127.0.0.1:3000/connect");
-  return <main className="companion-gate">
-    <div className="companion-grid" aria-hidden="true"/>
-    <section className="companion-panel" aria-live="polite">
-      <div className="companion-lockup"><img src={publicAsset("/assets/brand/logo.png")} alt=""/><span>StatOz<small>DESIGNER</small></span></div>
-      <Tag>{state === "connecting" ? "CONNECTING" : state === "expired" ? "SESSION ENDED" : "LOCAL COMPANION"}</Tag>
-      <h1>{state === "connecting" ? "Opening your workspace." : state === "expired" ? "Reconnect this tab." : "Your full Studio. Your computer."}</h1>
-      <p>{state === "connecting" ? "The Pages interface is pairing with the StatOz service on this device." : "GitHub Pages provides the interface. Projects, registered media, exports, assistant sign-ins, and posting sessions stay on this computer."}</p>
-      {detail && <div className="companion-error" role="alert"><Icon name="close" size={17}/><span>{detail}</span></div>}
-      {state !== "connecting" && <Button onClick={openCompanion}><Icon name="lock" size={17}/>{state === "expired" ? "Reconnect companion" : "Connect local companion"}</Button>}
-      {state === "connecting" && <div className="companion-progress"><i/><span>PAIRING OVER LOOPBACK</span></div>}
-      <ol className="companion-steps">
-        <li><b>01</b><span>Start the project with <code>npm run dev</code> or <code>npm start</code>.</span></li>
-        <li><b>02</b><span>Open the printed <code>/connect</code> link. Custom ports use that exact link.</span></li>
-        <li><b>03</b><span>Allow local-network access if Chrome or Edge asks.</span></li>
-      </ol>
-      <small className="companion-note">Chrome, Edge, and Firefox are supported. Safari loopback access is not supported.</small>
-    </section>
-  </main>;
+  return <DemoStudio connectionState={state} detail={detail} onConnect={openCompanion}/>;
 }

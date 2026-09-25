@@ -22,16 +22,27 @@ Next.js companion, one persistent render worker, the assistant process, and the 
 window process. `PORT` changes the local port; always use the printed connection URL
 when it does. Stop with Ctrl+C.
 
-The GitHub Pages site contains only the browser interface. Projects, assets, player
-records, render inputs, exports, Chromium and FFmpeg remain in local `storage` and are
-never uploaded to GitHub. Pairing is one-use and expires after two minutes. The tab
+The GitHub Pages site opens as an interactive, read-only demo when no companion is
+connected. Visitors can browse every public template family, play and scrub the
+checked-in video compositions, inspect the StatOz logo plus stadium and arena reference
+art, read every brand-guide section, and page through the complete 12-slide sample
+investor deck. Every preview uses the same `Composition` component as the editor and
+export worker. Demo mode has no create, edit, upload, save, download, export, assistant,
+investor-review, ESPN, social-account, or posting controls, and it makes no companion API
+requests during ordinary browsing.
+
+Only `public/assets/brand/logo.png`, `public/assets/library/stadium.png`, and
+`public/assets/library/arena.png` are copied into the static Pages artifact. Projects,
+assets, player records, render inputs, exports, Chromium and FFmpeg remain in local
+`storage` and are never uploaded to GitHub. Pairing is one-use and expires after two minutes. The tab
 holds its signed session only in memory, so refreshes and new tabs reconnect through
 the printed `/connect` link. Chrome or Edge may ask permission to reach devices on the
 local network; allow it for the loopback companion. Firefox is also supported. Safari
 is unsupported because it can block an HTTPS page from reaching an HTTP loopback app.
 
-If the companion is stopped or a session ends, the hosted UI returns to the connection
-screen. Restart the launcher and open `/connect` again. The direct recovery and
+If the companion is stopped, permission is denied, or a session ends, the hosted UI
+keeps the demo usable and shows a compact reconnect message. Restart the launcher and
+open `/connect` again. Successful pairing replaces the demo with the full Studio. The direct recovery and
 development UI remains available at **http://127.0.0.1:3000**.
 
 FFmpeg is resolved from `FFMPEG_PATH`, PATH, or Python's `imageio_ffmpeg` package.
@@ -184,6 +195,8 @@ npm run typecheck
 npm test
 npm run test:media
 npm run build
+npm run build:pages
+npm run test:pages-demo
 ```
 
 With the studio running, `npm run test:studio` exercises creation, saves, preview
@@ -193,6 +206,11 @@ checks imported clip trims, mixed audio, silence, and decoding. These checks cre
 labelled verification projects and exports in the local library. After signing in,
 `npm run test:publish` opens each site composer with recent exports, saves screenshots
 to `test-results/publish`, and closes the tabs without posting.
+
+`test:pages-demo` serves the exported site locally, confirms disconnected browsing makes
+no API or port-3000 requests, exercises template previews, motion controls, the public
+asset allowlist, brand guide and all 12 pitch slides, and records desktop/mobile screenshots
+under `test-results/pages-demo`.
 
 Media checks render all supported template/ratio combinations, including both card families
 with a linked player, plus intermediate video frames

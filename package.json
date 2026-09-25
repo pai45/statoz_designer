@@ -14,6 +14,7 @@
     "typecheck": "tsc --noEmit",
     "test": "tsx --test tests/*.test.ts",
     "test:media": "tsx scripts/verify-media.ts",
+    "test:pages-demo": "tsx scripts/verify-pages-demo.ts",
     "test:pitch-exports": "tsx scripts/verify-pitch-exports.ts",
     "test:pitch-ui": "tsx scripts/verify-pitch-ui.ts",
     "test:investor-agent": "tsx --test --test-name-pattern [Ii]nvestor tests/agent.test.ts tests/investor-review.test.ts",
